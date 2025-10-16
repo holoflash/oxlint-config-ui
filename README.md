@@ -10,3 +10,26 @@ The idea came from a desire to be able to quickly play around with the various r
 - Add more TODO's
 
 [How to contribute](./CONTRIBUTE.md)
+
+# bun-react-template
+
+To install dependencies:
+
+```bash
+bun install
+```
+
+To start a development server:
+
+```bash
+bun dev
+```
+
+To lint
+
+```bash
+bun lint
+```
+
+This project was created using `bun init` in bun v1.3.0. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+

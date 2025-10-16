@@ -28,7 +28,7 @@ Thank you for your interest in contributing!
    - Describe what you have done and submit PR for review.
 
 ## Code Style
-- Run `pnpm lint` before submitting your PR.
+- Run `bun lint` before submitting your PR.
 
 ## Questions or Suggestions?
 - Open an issue if you have questions, suggestions, or want to discuss a new idea.
