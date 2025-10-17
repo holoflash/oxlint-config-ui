@@ -5,7 +5,7 @@ const path = "./.oxlintrc.json";
 const server = serve({
   routes: {
     "/*": index,
-    "/": {
+    "/config": {
       async GET() {
         // Always read fresh from file to ensure we have the latest state
         const file = Bun.file(path);
