@@ -9,5 +9,7 @@
     "style": "off",
     "suspicious": "off"
   },
-  "rules": {}
+  "rules": {
+    "define-emits-declaration": "warn"
+  }
 }
