@@ -1,3 +1,151 @@
+.rules-categories-dropdowns {
+  display: grid;
+  gap: 1rem;
+}
+
+.rules-category-details {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+  font-size: 1rem;
+  box-shadow: none;
+}
+
+.rules-category-summary {
+  font-weight: 600;
+  color: var(--accent-yellow);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  outline: none;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+}
+
+.rules-category-details[open] .rules-category-summary {
+  color: var(--accent-mauve);
+}
+
+.rules-menu-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.rule-menu-item {
+  min-height: 40px;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.rule-menu-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--accent-green);
+  letter-spacing: 0.01em;
+}
+
+.rule-menu-select {
+  min-width: 80px;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+}
+
+.rule-menu-category {
+  font-size: 0.85rem;
+  color: var(--accent-yellow);
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.active-rules-section {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.categories-section {
+  font-size: 1rem;
+}
+
+.category-item {
+  min-height: 40px;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.category-select {
+  min-width: 80px;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+}
+
+.category-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--accent-yellow);
+  letter-spacing: 0.01em;
+}
+
+details[open] {
+  box-shadow: none;
+}
+/* Rule Level Colors */
+.rule-level-error {
+  border-color: var(--accent-red) !important;
+  background: #2a1a1f;
+}
+.rule-level-warn {
+  border-color: var(--accent-yellow) !important;
+  background: #2a211a;
+}
+.rule-level-off {
+  border-color: var(--border-muted);
+  background: var(--bg-tertiary);
+}
+
+.rule-menu-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-muted);
+  border-radius: 6px;
+  padding: 0.75rem;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.rule-menu-item:hover {
+  border-color: var(--border-color);
+}
+
+.rule-menu-name {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--accent-green);
+}
+
+.rule-menu-category {
+  font-size: 0.75rem;
+  color: var(--accent-yellow);
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.active-rules-section {
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent-blue);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
 :root {
   /* Catppuccin Mocha colors */
   --bg-primary: #1e1e2e;
@@ -39,16 +187,11 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   font-size: 14px;
-}
-
-.app {
+  padding: 1rem;
   max-width: 900px;
   margin: 0 auto;
-  padding: 1.5rem;
-  min-height: 100vh;
 }
 
-/* Typography */
 h1 {
   font-size: 1.75rem;
   font-weight: 600;
@@ -70,7 +213,7 @@ h2 {
 /* Oxlint Manager Layout */
 .oxlint-manager {
   display: grid;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 /* Action Buttons */
