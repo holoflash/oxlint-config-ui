@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/index.tsx",
-    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
+    "dev": "bun --hot src/index.ts",
+    "build": "bun build --target=bun --production --outdir=dist ./src/index.ts --sourcemap",
     "start": "NODE_ENV=production bun src/index.tsx",
     "lint": "oxlint --type-aware"
   },

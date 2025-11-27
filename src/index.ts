@@ -7,7 +7,6 @@ const server = serve({
     "/*": index,
     "/config": {
       async GET() {
-        // Always read fresh from file to ensure we have the latest state
         const file = Bun.file(path);
         const contents = await file.json();
         return Response.json({ contents });
@@ -16,15 +15,12 @@ const server = serve({
         try {
           const newConfig = await request.json();
 
-          // Validate that it's a valid JSON object
           if (typeof newConfig !== "object" || newConfig === null) {
             return new Response("Invalid JSON object", { status: 400 });
           }
 
-          // Write the new configuration to the file
           await Bun.write(path, JSON.stringify(newConfig, null, 2));
 
-          // Read back from file to ensure we return exactly what was saved
           const updatedFile = Bun.file(path);
           const updatedContents = await updatedFile.json();
 
@@ -52,7 +48,6 @@ const server = serve({
         const errorOutput = await new Response(proc.stderr).text();
         await proc.exited;
 
-        // Extract the summary line that shows warnings and errors count
         const fullOutput = output + errorOutput;
         const summaryMatch = fullOutput.match(
           /Found (\d+) warnings? and (\d+) errors?/,
@@ -60,22 +55,20 @@ const server = serve({
 
         let summary = "No summary found";
         if (summaryMatch) {
-          summary = summaryMatch[0]; // e.g., "Found 0 warnings and 6 errors"
+          summary = summaryMatch[0];
         }
 
         return Response.json({
           summary,
-          fullOutput: fullOutput, // Keep full output available if needed
+          fullOutput: fullOutput,
         });
       },
     },
   },
 
   development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
     hmr: true,
 
-    // Echo console logs from the browser to the server
     console: true,
   },
 });

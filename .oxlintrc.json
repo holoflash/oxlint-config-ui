@@ -2,11 +2,12 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "categories": {
     "correctness": "off",
-    "nursery": "off",
     "pedantic": "off",
-    "style": "off",
+    "perf": "off",
     "restriction": "off",
-    "suspicious": "off"
+    "style": "off",
+    "suspicious": "off",
+    "nursery": "off"
   },
   "rules": {
     "for-direction": "off",
@@ -588,6 +589,28 @@
     "require-module-specifiers": "off",
     "require-post-message-target-origin": "off",
     "no-required-prop-with-default": "off",
-    "require-default-export": "off"
+    "require-default-export": "off",
+    "no-await-in-loop": "off",
+    "no-useless-call": "off",
+    "no-accumulating-spread": "off",
+    "no-array-index-key": "off",
+    "jsx-no-jsx-as-prop": "off",
+    "jsx-no-new-array-as-prop": "off",
+    "jsx-no-new-function-as-prop": "off",
+    "jsx-no-new-object-as-prop": "off",
+    "prefer-array-find": "off",
+    "prefer-array-flat-map": "off",
+    "prefer-set-has": "off",
+    "constructor-super": "off",
+    "getter-return": "off",
+    "no-misleading-character-class": "off",
+    "no-undef": "off",
+    "no-unreachable": "off",
+    "export": "off",
+    "named": "off",
+    "branches-sharing-code": "off",
+    "no-map-spread": "off",
+    "no-return-in-finally": "off",
+    "require-render-return": "off"
   }
 }
