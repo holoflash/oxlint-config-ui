@@ -71,11 +71,7 @@ export function App() {
 
   const updateCategory = (categoryName: string, newValue: string) => {
     const updatedCategories = { ...config.categories };
-    if (newValue === "off") {
-      delete updatedCategories[categoryName];
-    } else {
-      updatedCategories[categoryName] = newValue;
-    }
+    updatedCategories[categoryName] = newValue;
 
     const rulesInCategory = (RULES_BY_CATEGORY[categoryName] || []) as Rule[];
     const updatedRules = { ...config.rules };

@@ -6,7 +6,8 @@
     "restriction": "off",
     "style": "off",
     "suspicious": "off",
-    "nursery": "off"
+    "nursery": "off",
+    "correctness": "off"
   },
   "rules": {}
 }
