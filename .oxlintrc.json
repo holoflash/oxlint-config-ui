@@ -1,5 +1,12 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "categories": {},
+  "categories": {
+    "pedantic": "off",
+    "perf": "off",
+    "restriction": "off",
+    "style": "off",
+    "suspicious": "off",
+    "nursery": "off"
+  },
   "rules": {}
 }

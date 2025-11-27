@@ -56,27 +56,36 @@ export function App() {
   };
 
   const updateRuleValue = (ruleName: string, newValue: string) => {
+    const updatedRules = { ...config.rules };
+    if (newValue === "off") {
+      delete updatedRules[ruleName];
+    } else {
+      updatedRules[ruleName] = newValue;
+    }
     const updatedConfig = {
       ...config,
-      rules: {
-        ...config.rules,
-        [ruleName]: newValue,
-      },
+      rules: updatedRules,
     };
     updateConfig(updatedConfig);
   };
 
   const updateCategory = (categoryName: string, newValue: string) => {
-    const updatedCategories = {
-      ...config.categories,
-      [categoryName]: newValue,
-    };
+    const updatedCategories = { ...config.categories };
+    if (newValue === "off") {
+      delete updatedCategories[categoryName];
+    } else {
+      updatedCategories[categoryName] = newValue;
+    }
 
     const rulesInCategory = (RULES_BY_CATEGORY[categoryName] || []) as Rule[];
     const updatedRules = { ...config.rules };
 
     for (const rule of rulesInCategory) {
-      updatedRules[rule.name] = newValue;
+      if (newValue === "off") {
+        delete updatedRules[rule.name];
+      } else {
+        updatedRules[rule.name] = newValue;
+      }
     }
 
     const updatedConfig = {
@@ -88,26 +97,10 @@ export function App() {
   };
 
   const disableAllRules = () => {
-    const disabledCategories: Record<string, string> = {};
-    CATEGORY_ORDER.forEach((cat) => {
-      disabledCategories[cat] = "off";
-    });
-    const disabledRules: Record<string, string> = { ...config.rules };
-
-    Object.keys(config.rules || {}).forEach((ruleName) => {
-      disabledRules[ruleName] = "off";
-    });
-
-    Object.values(RULES_BY_CATEGORY)
-      .flat()
-      .forEach((rule: Rule) => {
-        disabledRules[rule.name] = "off";
-      });
-
+    const clearedRules: Record<string, string> = {};
     const updatedConfig = {
       ...config,
-      categories: disabledCategories,
-      rules: disabledRules,
+      rules: clearedRules,
     };
     updateConfig(updatedConfig);
   };
