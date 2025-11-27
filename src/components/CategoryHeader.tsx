@@ -46,7 +46,7 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
       disabled={isLoading}
     >
       {ruleOptions.map((option, index) => (
-        <option key={index} value={option}>
+        <option key={index + option} value={option}>
           {option}
         </option>
       ))}

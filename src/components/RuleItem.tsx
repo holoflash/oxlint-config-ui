@@ -24,7 +24,7 @@ export const RuleItem: React.FC<RuleItemProps> = ({
   const docUrl = `${BASE_DOCS_URL}/${vendorName}/${ruleName.replace(/-/g, "-")}.html`;
 
   return (
-    <div key={`rule-item-${ruleName}`} className="rule-menu-item">
+    <div key={`rule-item-${ruleName}-${vendorName}`} className="rule-menu-item">
       <div className="rule-name-group">
         <span className="rule-menu-name">{ruleName}</span>
         <a
