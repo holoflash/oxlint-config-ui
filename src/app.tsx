@@ -57,31 +57,60 @@ export function App() {
 
   const updateRuleValue = (ruleName: string, newValue: string) => {
     const updatedRules = { ...config.rules };
+
+    // Update the rule
     if (newValue === "off") {
       delete updatedRules[ruleName];
     } else {
       updatedRules[ruleName] = newValue;
     }
+
+    // Find the category for this rule
+    let categoryName = null;
+    for (const [cat, rules] of Object.entries(RULES_BY_CATEGORY)) {
+      if (rules.some((r) => r.name === ruleName)) {
+        categoryName = cat;
+        break;
+      }
+    }
+
+    const updatedCategories = { ...config.categories };
+    if (categoryName) {
+      const rulesInCategory = (RULES_BY_CATEGORY[categoryName] || []) as Rule[];
+      const enabledCount = rulesInCategory.filter(
+        (rule) => updatedRules[rule.name] && updatedRules[rule.name] !== "off",
+      ).length;
+      if (enabledCount === 0) {
+        updatedCategories[categoryName] = "off";
+      } else {
+        // If all enabled, set to value of first rule, else leave as is
+        // (Do not delete category)
+      }
+    }
+
     const updatedConfig = {
       ...config,
       rules: updatedRules,
+      categories: updatedCategories,
     };
     updateConfig(updatedConfig);
   };
 
   const updateCategory = (categoryName: string, newValue: string) => {
     const updatedCategories = { ...config.categories };
-    updatedCategories[categoryName] = newValue;
-
     const rulesInCategory = (RULES_BY_CATEGORY[categoryName] || []) as Rule[];
     const updatedRules = { ...config.rules };
 
-    for (const rule of rulesInCategory) {
-      if (newValue === "off") {
+    if (newValue === "off") {
+      for (const rule of rulesInCategory) {
         delete updatedRules[rule.name];
-      } else {
+      }
+      updatedCategories[categoryName] = "off";
+    } else {
+      for (const rule of rulesInCategory) {
         updatedRules[rule.name] = newValue;
       }
+      updatedCategories[categoryName] = newValue;
     }
 
     const updatedConfig = {
@@ -93,9 +122,22 @@ export function App() {
   };
 
   const disableAllRules = () => {
+    const allCategoryNames = new Set([
+      ...CATEGORY_ORDER,
+      ...Object.keys(config.categories || {}),
+    ]);
+
+    const offCategories: Record<string, string> = {};
+
+    allCategoryNames.forEach((cat) => {
+      offCategories[cat] = "off";
+    });
+
     const clearedRules: Record<string, string> = {};
+
     const updatedConfig = {
       ...config,
+      categories: offCategories,
       rules: clearedRules,
     };
     updateConfig(updatedConfig);
@@ -112,7 +154,6 @@ export function App() {
     <div className="oxlint-manager">
       <div className="output-section">
         <h2>Lint Status</h2>
-
         <p
           ref={responseInputRef as React.RefObject<HTMLParagraphElement>}
           className="output-status"

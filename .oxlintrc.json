@@ -1,13 +1,13 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "categories": {
+    "correctness": "off",
     "pedantic": "off",
     "perf": "off",
     "restriction": "off",
     "style": "off",
     "suspicious": "off",
-    "nursery": "off",
-    "correctness": "off"
+    "nursery": "off"
   },
   "rules": {}
 }

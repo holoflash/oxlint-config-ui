@@ -27,7 +27,7 @@ export function useOxlintConfig() {
       }
     } catch (error) {
       if (responseInputRef.current) {
-        responseInputRef.current.textContent = `Error running lint: ${error}`;
+        responseInputRef.current.textContent = `Error running oxlint: ${error}`;
       }
     }
   };
@@ -42,14 +42,14 @@ export function useOxlintConfig() {
 
       if (responseInputRef.current) {
         responseInputRef.current.textContent =
-          "Loading config and running lint...";
+          "Loading config and running oxlint...";
       }
 
       if (Object.keys(loadedConfig).length > 0) {
         await runLintAndDisplay();
       } else if (responseInputRef.current) {
         responseInputRef.current.textContent =
-          "Config loaded, but it's empty. Not running lint.";
+          "Config loaded, but it's empty. Not running oxlint.";
       }
     } catch (error) {
       if (responseInputRef.current) {
