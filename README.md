@@ -4,8 +4,7 @@ Inspired by https://github.com/eslint/config-inspector, the goal is to build an 
 The idea came from a desire to be able to quickly play around with the various rules and settings, and see their effects immediately.
 
 ### TODO
-- Investigate how to bring in all the available rules and their descriptions
-- Investigate how to bring in descriptions for each rule/category/setting etc.
+- Add proper build script and consider making an NPM package
 - Add more TODO's
 
 [How to contribute](./CONTRIBUTE.md)
