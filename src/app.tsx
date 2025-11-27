@@ -26,7 +26,7 @@ export function App() {
   >({});
   const { activeRules, categoryActiveCounts } = useActiveRules(config);
 
-  const updateConfig = async (updatedConfig: any) => {
+  const updateConfig = async (updatedConfig: any, successMessage: string) => {
     try {
       setIsLoading(true);
       const res = await fetch("/config", {
@@ -38,7 +38,7 @@ export function App() {
       if (responseInputRef.current) {
         if (res.ok) {
           setConfig(data.contents);
-          responseInputRef.current.textContent = "Running oxlint...";
+          responseInputRef.current.textContent = `${successMessage} Running oxlint...`;
           await runLintAndDisplay();
         } else {
           responseInputRef.current.textContent = `Error: ${data.message || (await res.text())}`;
@@ -58,14 +58,12 @@ export function App() {
   const updateRuleValue = (ruleName: string, newValue: string) => {
     const updatedRules = { ...config.rules };
 
-    // Update the rule
     if (newValue === "off") {
       delete updatedRules[ruleName];
     } else {
       updatedRules[ruleName] = newValue;
     }
 
-    // Find the category for this rule
     let categoryName = null;
     for (const [cat, rules] of Object.entries(RULES_BY_CATEGORY)) {
       if (rules.some((r) => r.name === ruleName)) {
@@ -82,9 +80,6 @@ export function App() {
       ).length;
       if (enabledCount === 0) {
         updatedCategories[categoryName] = "off";
-      } else {
-        // If all enabled, set to value of first rule, else leave as is
-        // (Do not delete category)
       }
     }
 
@@ -93,7 +88,7 @@ export function App() {
       rules: updatedRules,
       categories: updatedCategories,
     };
-    updateConfig(updatedConfig);
+    updateConfig(updatedConfig, "Running oxlint...");
   };
 
   const updateCategory = (categoryName: string, newValue: string) => {
@@ -118,7 +113,7 @@ export function App() {
       categories: updatedCategories,
       rules: updatedRules,
     };
-    updateConfig(updatedConfig);
+    updateConfig(updatedConfig, "Running oxlint...");
   };
 
   const disableAllRules = () => {
@@ -140,7 +135,7 @@ export function App() {
       categories: offCategories,
       rules: clearedRules,
     };
-    updateConfig(updatedConfig);
+    updateConfig(updatedConfig, "Running oxlint...");
   };
 
   const toggleCategoryExpansion = (categoryName: string) => {
