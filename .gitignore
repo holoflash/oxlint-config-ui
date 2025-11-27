@@ -5,6 +5,7 @@ node_modules
 out
 dist
 *.tgz
+myapp
 
 # code coverage
 coverage
