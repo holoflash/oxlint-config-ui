@@ -187,7 +187,7 @@ export function App() {
                   <div className="rules-menu-list">
                     {rules.map((rule) => (
                       <RuleItem
-                        key={rule.name + rule.vendor}
+                        key={`${rule.name}-${rule.vendor}`}
                         ruleName={rule.name}
                         categoryName={categoryName}
                         vendorName={rule.vendor}
@@ -225,9 +225,9 @@ export function App() {
               No rules are currently set to 'warn' or 'error'.
             </p>
           ) : (
-            activeRules.map(({ name, level }) => (
+            activeRules.map(({ name, level, category }) => (
               <span
-                key={`${name}-${level}`}
+                key={`${name}-${level}-${category}`}
                 className={`active-rule-tag rule-level-${level}`}
               >
                 {name} <span className="rule-level-text">[{level}]</span>
