@@ -40,9 +40,6 @@ export function App() {
           setConfig(data.contents);
           responseInputRef.current.textContent = `${successMessage} Running oxlint...`;
           await runLintAndDisplay();
-        } else {
-          responseInputRef.current.textContent = `Error: ${data.message || (await res.text())}`;
-          await loadConfig();
         }
       }
     } catch (error) {
@@ -190,7 +187,7 @@ export function App() {
                   <div className="rules-menu-list">
                     {rules.map((rule) => (
                       <RuleItem
-                        key={rule.name}
+                        key={rule.name + rule.vendor}
                         ruleName={rule.name}
                         categoryName={categoryName}
                         vendorName={rule.vendor}
@@ -230,7 +227,7 @@ export function App() {
           ) : (
             activeRules.map(({ name, level }) => (
               <span
-                key={name}
+                key={`${name}-${level}`}
                 className={`active-rule-tag rule-level-${level}`}
               >
                 {name} <span className="rule-level-text">[{level}]</span>
