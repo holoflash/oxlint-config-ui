@@ -1,25 +1,30 @@
 {
-  "name": "bun-react-template",
-  "version": "0.1.0",
+  "name": "oxlint-config-ui",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/index.ts",
-    "build": "bun build --target=bun --production --outdir=dist ./src/index.ts --sourcemap",
-    "start": "NODE_ENV=production bun src/index.ts",
-    "lint": "oxlint --type-aware"
+    "dev": "vite",
+    "start":"npx ts-node index.ts",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint --type-aware",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19",
-    "react-dom": "^19"
+    "express": "^5.2.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@prettier/plugin-oxc": "0.0.4",
-    "@types/bun": "latest",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "oxlint": "^1.22.0",
-    "oxlint-tsgolint": "^0.2.0",
-    "prettier": "3.6.2"
+    "@types/express": "5.0.6",
+    "@types/node": "25.0.9",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "oxlint": "1.22.0",
+    "oxlint-tsgolint": "0.11.1",
+    "globals": "17.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.2.4"
   }
 }
