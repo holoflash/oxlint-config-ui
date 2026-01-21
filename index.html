@@ -243,41 +243,121 @@
       }
 
       function renderList(container, items, selectedIndex, clickFnName) {
-        container.innerHTML = items
-          .map(
-            (item, i) => `
-        <div class="list-item ${i === selectedIndex ? "selected" : ""}" 
-             onclick="${clickFnName}(${i})">
-          ${item}
-        </div>
-      `,
-          )
-          .join("");
-
+        // Clear previous children
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+        items.forEach((item, i) => {
+          const div = document.createElement("div");
+          div.className =
+            "list-item" + (i === selectedIndex ? " selected" : "");
+          div.textContent = item;
+          div.onclick = () => {
+            window[clickFnName](i);
+          };
+          container.appendChild(div);
+        });
         // Auto Scroll
         const selectedEl = container.children[selectedIndex];
         if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
       }
 
       function renderDetails(rule) {
+        // Clear previous content
+        els.details.textContent = "";
         if (!rule) {
-          els.details.innerHTML =
-            '<span style="color:#666">No rule selected</span>';
+          const span = document.createElement("span");
+          span.style.color = "#666";
+          span.textContent = "No rule selected";
+          els.details.appendChild(span);
           return;
         }
-        console.log(rule);
+        // Name
+        const nameRow = document.createElement("div");
+        nameRow.className = "prop-row";
+        const nameKey = document.createElement("span");
+        nameKey.className = "prop-key";
+        nameKey.textContent = "Name:";
+        nameRow.appendChild(nameKey);
+        nameRow.appendChild(
+          document.createTextNode(" " + (rule.value || "N/A")),
+        );
+        els.details.appendChild(nameRow);
 
-        els.details.innerHTML = `
-        <div class="prop-row"><span class="prop-key">Name:</span> ${rule.value || "N/A"}</div>
-        <div class="prop-row"><span class="prop-key">Category:</span> ${rule.category || "N/A"}</div>
-        <div class="prop-row"><span class="prop-key">Scope:</span> ${rule.scope || "N/A"}</div>
-        <div class="prop-row"><span class="prop-key">Default:</span> ${rule.default}</div>
-        <div class="prop-row"><span class="prop-key">Type Aware:</span> ${rule.type_aware}</div>
-        <div class="prop-row"><span class="prop-key">Fix:</span> ${rule.fix}</div>
-        <br>
-        <div class="prop-row"><span class="prop-key">Docs:</span></div>
-        <a href="${rule.docs_url}" target="_blank">${rule.docs_url}</a>
-      `;
+        // Category
+        const catRow = document.createElement("div");
+        catRow.className = "prop-row";
+        const catKey = document.createElement("span");
+        catKey.className = "prop-key";
+        catKey.textContent = "Category:";
+        catRow.appendChild(catKey);
+        catRow.appendChild(
+          document.createTextNode(" " + (rule.category || "N/A")),
+        );
+        els.details.appendChild(catRow);
+
+        // Scope
+        const scopeRow = document.createElement("div");
+        scopeRow.className = "prop-row";
+        const scopeKey = document.createElement("span");
+        scopeKey.className = "prop-key";
+        scopeKey.textContent = "Scope:";
+        scopeRow.appendChild(scopeKey);
+        scopeRow.appendChild(
+          document.createTextNode(" " + (rule.scope || "N/A")),
+        );
+        els.details.appendChild(scopeRow);
+
+        // Default
+        const defRow = document.createElement("div");
+        defRow.className = "prop-row";
+        const defKey = document.createElement("span");
+        defKey.className = "prop-key";
+        defKey.textContent = "Default:";
+        defRow.appendChild(defKey);
+        defRow.appendChild(document.createTextNode(" " + rule.default));
+        els.details.appendChild(defRow);
+
+        // Type Aware
+        const typeRow = document.createElement("div");
+        typeRow.className = "prop-row";
+        const typeKey = document.createElement("span");
+        typeKey.className = "prop-key";
+        typeKey.textContent = "Type Aware:";
+        typeRow.appendChild(typeKey);
+        typeRow.appendChild(document.createTextNode(" " + rule.type_aware));
+        els.details.appendChild(typeRow);
+
+        // Fix
+        const fixRow = document.createElement("div");
+        fixRow.className = "prop-row";
+        const fixKey = document.createElement("span");
+        fixKey.className = "prop-key";
+        fixKey.textContent = "Fix:";
+        fixRow.appendChild(fixKey);
+        fixRow.appendChild(document.createTextNode(" " + rule.fix));
+        els.details.appendChild(fixRow);
+
+        // Spacer
+        els.details.appendChild(document.createElement("br"));
+
+        // Docs label
+        const docsRow = document.createElement("div");
+        docsRow.className = "prop-row";
+        const docsKey = document.createElement("span");
+        docsKey.className = "prop-key";
+        docsKey.textContent = "Docs:";
+        docsRow.appendChild(docsKey);
+        els.details.appendChild(docsRow);
+
+        // Docs link
+        if (rule.docs_url) {
+          const a = document.createElement("a");
+          a.href = rule.docs_url;
+          a.target = "_blank";
+          a.textContent = rule.docs_url;
+          els.details.appendChild(a);
+        }
       }
 
       function updateActivePane() {

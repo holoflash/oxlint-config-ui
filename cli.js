@@ -51,8 +51,8 @@ server.listen(PORT, () => {
     const port = server.address().port;
     const url = `http://localhost:${port}`;
 
-    console.log(`\n  \x1b[32m✔\x1b[0m  \x1b[1mOxLint GUI\x1b[0m running at: \x1b[36m${url}\x1b[0m\n`);
-
+    console.log(`OxLint Rules UI running at: ${url}`);
+    // Try to open browser if possible
     const start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open');
     exec(`${start} ${url}`);
 });
