@@ -113,12 +113,6 @@
         margin-right: 8px;
       }
 
-      hr {
-        border: 0;
-        border-top: 1px solid var(--surface);
-        margin: 15px 0;
-      }
-
       a {
         color: var(--accent-alt);
         text-decoration: none;
@@ -169,7 +163,6 @@
       window.__RULES__ = /* [[INJECT_DATA]] */ [];
 
       const state = {
-        rawRules: [],
         categories: [],
         rulesByCategory: {},
         activePane: "cats",
@@ -178,40 +171,21 @@
       };
 
       const els = {
-        listCats: document.getElementById("list-cats"),
-        listRules: document.getElementById("list-rules"),
+        cats: document.getElementById("list-cats"),
+        rules: document.getElementById("list-rules"),
         details: document.getElementById("details-content"),
         paneCats: document.getElementById("pane-cats"),
         paneRules: document.getElementById("pane-rules"),
-        ruleCount: document.getElementById("rule-count"),
+        count: document.getElementById("rule-count"),
       };
 
-      const safeSort = (a, b) => {
-        const nameA = (a.name || a.id || "").toString().toLowerCase();
-        const nameB = (b.name || b.id || "").toString().toLowerCase();
-        return nameA.localeCompare(nameB);
-      };
+      const sortName = (a, b) =>
+        (a.name || a.id || "")
+          .toString()
+          .localeCompare((b.name || b.id || "").toString());
 
       function init() {
-        try {
-          const data = window.__RULES__;
-
-          if (!Array.isArray(data)) {
-            if (data === null || data === undefined) {
-              throw new Error("No data injected from server.");
-            }
-            throw new Error("Invalid data format received.");
-          }
-
-          state.rawRules = data;
-          processData(data);
-          render();
-        } catch (e) {
-          els.details.innerHTML = `<span style="color: #ff5555">Error: ${e.message}</span>`;
-        }
-      }
-
-      function processData(rules) {
+        const rules = window.__RULES__ || [];
         const groups = {};
 
         rules.forEach((rule) => {
@@ -221,211 +195,125 @@
         });
 
         state.categories = Object.keys(groups).sort();
-        state.categories.forEach((cat) => {
-          groups[cat].sort(safeSort);
-        });
-
+        state.categories.forEach((c) => groups[c].sort(sortName));
         state.rulesByCategory = groups;
-        els.ruleCount.textContent = `Rules: ${rules.length}`;
+
+        els.count.textContent = `Rules: ${rules.length}`;
+        render();
       }
 
       function render() {
+        renderList(els.cats, state.categories, state.catIndex, true);
+        const curCat = state.categories[state.catIndex];
+        const rules = state.rulesByCategory[curCat] || [];
         renderList(
-          els.listCats,
-          state.categories,
-          state.catIndex,
-          "clickCat",
-          true,
+          els.rules,
+          rules.map((r) => r.value),
+          state.ruleIndex,
+          false,
         );
-
-        const currentCat = state.categories[state.catIndex];
-        const rules = state.rulesByCategory[currentCat] || [];
-
-        const ruleNames = rules.map((r) => r.value);
-        renderList(els.listRules, ruleNames, state.ruleIndex, "clickRule");
-
         renderDetails(rules[state.ruleIndex]);
-        updateActivePane();
+
+        els.paneCats.classList.toggle("active", state.activePane === "cats");
+        els.paneRules.classList.toggle("active", state.activePane === "rules");
       }
 
-      function renderList(
-        container,
-        items,
-        selectedIndex,
-        clickFnName,
-        isCat = false,
-      ) {
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
+      function renderList(container, items, selIdx, isCat) {
+        container.innerHTML = "";
         items.forEach((item, i) => {
           const div = document.createElement("div");
-          div.className =
-            "list-item" + (i === selectedIndex ? " selected" : "");
+          div.className = "list-item" + (i === selIdx ? " selected" : "");
           div.textContent = isCat
-            ? `${item} (${state.rulesByCategory[item]?.length || 0})`
+            ? `${item} (${state.rulesByCategory[item]?.length})`
             : `${i + 1}. ${item}`;
           div.onclick = () => {
-            window[clickFnName](i);
+            if (isCat) {
+              state.catIndex = i;
+              state.ruleIndex = 0;
+              state.activePane = "cats";
+            } else {
+              state.ruleIndex = i;
+              state.activePane = "rules";
+            }
+            render();
           };
           container.appendChild(div);
         });
-        const selectedEl = container.children[selectedIndex];
-        if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
+        container.children[selIdx]?.scrollIntoView({ block: "nearest" });
       }
 
       function renderDetails(rule) {
-        els.details.textContent = "";
-        if (!rule) {
-          const span = document.createElement("span");
-          span.style.color = "#666";
-          span.textContent = "No rule selected";
-          els.details.appendChild(span);
-          return;
-        }
-        // Name
-        const nameRow = document.createElement("div");
-        nameRow.className = "prop-row";
-        const nameKey = document.createElement("span");
-        nameKey.className = "prop-key";
-        nameKey.textContent = "Name:";
-        nameRow.appendChild(nameKey);
-        nameRow.appendChild(
-          document.createTextNode(" " + (rule.value || "N/A")),
-        );
-        els.details.appendChild(nameRow);
+        els.details.innerHTML = "";
+        if (!rule)
+          return els.details.appendChild(
+            document.createTextNode("No rule selected"),
+          );
 
-        // Category
-        const catRow = document.createElement("div");
-        catRow.className = "prop-row";
-        const catKey = document.createElement("span");
-        catKey.className = "prop-key";
-        catKey.textContent = "Category:";
-        catRow.appendChild(catKey);
-        catRow.appendChild(
-          document.createTextNode(" " + (rule.category || "N/A")),
-        );
-        els.details.appendChild(catRow);
+        const row = (key, val) => {
+          const d = document.createElement("div");
+          d.className = "prop-row";
+          const k = document.createElement("span");
+          k.className = "prop-key";
+          k.textContent = key;
+          d.append(k, " " + (val ?? "N/A"));
+          els.details.appendChild(d);
+        };
 
-        // Scope
-        const scopeRow = document.createElement("div");
-        scopeRow.className = "prop-row";
-        const scopeKey = document.createElement("span");
-        scopeKey.className = "prop-key";
-        scopeKey.textContent = "Scope:";
-        scopeRow.appendChild(scopeKey);
-        scopeRow.appendChild(
-          document.createTextNode(" " + (rule.scope || "N/A")),
-        );
-        els.details.appendChild(scopeRow);
+        row("Name:", rule.value);
+        row("Category:", rule.category);
+        row("Scope:", rule.scope);
+        row("Default:", rule.default);
+        row("Type Aware:", rule.type_aware);
+        row("Fix:", rule.fix);
 
-        // Default
-        const defRow = document.createElement("div");
-        defRow.className = "prop-row";
-        const defKey = document.createElement("span");
-        defKey.className = "prop-key";
-        defKey.textContent = "Default:";
-        defRow.appendChild(defKey);
-        defRow.appendChild(document.createTextNode(" " + rule.default));
-        els.details.appendChild(defRow);
-
-        // Type Aware
-        const typeRow = document.createElement("div");
-        typeRow.className = "prop-row";
-        const typeKey = document.createElement("span");
-        typeKey.className = "prop-key";
-        typeKey.textContent = "Type Aware:";
-        typeRow.appendChild(typeKey);
-        typeRow.appendChild(document.createTextNode(" " + rule.type_aware));
-        els.details.appendChild(typeRow);
-
-        // Fix
-        const fixRow = document.createElement("div");
-        fixRow.className = "prop-row";
-        const fixKey = document.createElement("span");
-        fixKey.className = "prop-key";
-        fixKey.textContent = "Fix:";
-        fixRow.appendChild(fixKey);
-        fixRow.appendChild(document.createTextNode(" " + rule.fix));
-        els.details.appendChild(fixRow);
-
-        // Spacer
         els.details.appendChild(document.createElement("br"));
 
-        // Docs label
         const docsRow = document.createElement("div");
         docsRow.className = "prop-row";
         const docsKey = document.createElement("span");
         docsKey.className = "prop-key";
         docsKey.textContent = "Docs:";
         docsRow.appendChild(docsKey);
-        els.details.appendChild(docsRow);
 
-        // Docs link
         if (rule.docs_url) {
           const a = document.createElement("a");
           a.href = rule.docs_url;
           a.target = "_blank";
           a.textContent = rule.docs_url;
-          els.details.appendChild(a);
+          docsRow.appendChild(a);
         }
+        els.details.appendChild(docsRow);
       }
-
-      function updateActivePane() {
-        els.paneCats.classList.toggle("active", state.activePane === "cats");
-        els.paneRules.classList.toggle("active", state.activePane === "rules");
-      }
-
-      window.clickCat = (i) => {
-        state.catIndex = i;
-        state.ruleIndex = 0;
-        state.activePane = "cats";
-        render();
-      };
-
-      window.clickRule = (i) => {
-        state.ruleIndex = i;
-        state.activePane = "rules";
-        render();
-      };
 
       document.addEventListener("keydown", (e) => {
-        const key = e.key.toLowerCase();
-
-        if (["arrowright", "l"].includes(key)) {
-          e.preventDefault();
+        const k = e.key.toLowerCase();
+        if (["arrowright", "l"].includes(k)) {
           state.activePane = "rules";
-          render();
-          return;
+          return render();
         }
-        if (["arrowleft", "h"].includes(key)) {
+        if (["arrowleft", "h"].includes(k)) {
           state.activePane = "cats";
-          render();
-          return;
+          return render();
         }
 
         const isCats = state.activePane === "cats";
-        const listLen = isCats
+        const max = isCats
           ? state.categories.length
           : state.rulesByCategory[state.categories[state.catIndex]]?.length ||
             0;
 
-        if (["arrowdown", "j"].includes(key)) {
+        if (["arrowdown", "j"].includes(k)) {
           if (isCats) {
-            state.catIndex = (state.catIndex + 1) % listLen;
+            state.catIndex = (state.catIndex + 1) % max;
             state.ruleIndex = 0;
-          } else {
-            state.ruleIndex = (state.ruleIndex + 1) % listLen;
-          }
+          } else state.ruleIndex = (state.ruleIndex + 1) % max;
           render();
         }
-        if (["arrowup", "k"].includes(key)) {
+        if (["arrowup", "k"].includes(k)) {
           if (isCats) {
-            state.catIndex = (state.catIndex - 1 + listLen) % listLen;
+            state.catIndex = (state.catIndex - 1 + max) % max;
             state.ruleIndex = 0;
-          } else {
-            state.ruleIndex = (state.ruleIndex - 1 + listLen) % listLen;
-          }
+          } else state.ruleIndex = (state.ruleIndex - 1 + max) % max;
           render();
         }
       });
