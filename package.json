@@ -8,8 +8,7 @@
     "oxlint-rules-ui": "./tui.js"
   },
   "files": [
-    "cli.js",
-    "index.html"
+    "cli.js"
   ],
   "scripts": {
     "tui": "node tui.js"
