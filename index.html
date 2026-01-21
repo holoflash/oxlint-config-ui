@@ -38,6 +38,7 @@
         height: 100%;
         flex: 1 1 auto;
         min-height: 0;
+        gap: 16px;
       }
 
       .tui-box {
@@ -47,14 +48,17 @@
         background: var(--bg);
         display: flex;
         flex-direction: column;
-        margin: 0 8px;
+        min-width: 0;
       }
 
-      .tui-box:first-child {
-        margin-left: 0;
+      #pane-cats,
+      #pane-rules {
+        flex: 0 0 auto;
+        min-width: min-content;
       }
-      .tui-box:last-child {
-        margin-right: 0;
+
+      #pane-details {
+        flex: 1 1 auto;
       }
 
       .tui-box.active {
@@ -77,10 +81,12 @@
         font-size: 0.75rem;
         letter-spacing: 0.1em;
         color: var(--border);
+        white-space: nowrap;
       }
 
       .list-container {
         overflow-y: auto;
+        overflow-x: hidden;
         flex: 1;
         padding: 12px 0;
         scrollbar-width: none;
@@ -89,7 +95,7 @@
       .list-item {
         padding: 4px 16px;
         cursor: pointer;
-        transition: all 0.1s ease;
+        white-space: nowrap;
       }
 
       .list-item.selected {
@@ -102,6 +108,7 @@
         padding: 20px;
         overflow-y: auto;
         line-height: 1.6;
+        word-break: break-word;
       }
 
       .prop-row {
@@ -119,6 +126,7 @@
         background: var(--surface);
         padding: 2px 6px;
         border-radius: 4px;
+        word-break: break-all;
       }
 
       .status-bar {
@@ -136,18 +144,18 @@
     </style>
   </head>
   <body>
-    <div class="flex-row h-full">
-      <div class="tui-box" id="pane-cats" style="width: 20%">
+    <div class="flex-row">
+      <div class="tui-box" id="pane-cats">
         <div class="tui-title">Categories</div>
         <div class="list-container" id="list-cats"></div>
       </div>
 
-      <div class="tui-box" id="pane-rules" style="width: 30%">
+      <div class="tui-box" id="pane-rules">
         <div class="tui-title">Rules</div>
         <div class="list-container" id="list-rules"></div>
       </div>
 
-      <div class="tui-box" id="pane-details" style="width: 50%">
+      <div class="tui-box" id="pane-details">
         <div class="tui-title">Details</div>
         <div class="details-content" id="details-content">Loading...</div>
       </div>
@@ -155,7 +163,7 @@
 
     <div class="status-bar">
       <span>[NAV]: Arrows / HJKL</span>
-      <span>[SWITCH PANE]: Arrows / Click</span>
+      <span>[PANE]: H-L</span>
       <span id="rule-count">Rules: 0</span>
     </div>
 

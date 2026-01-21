@@ -8,7 +8,7 @@ npm install
 ```
 And then:
 ```bash
-node cli.js
+npm run start
 ```
 
 Uses `oxlint --rules --format=json` to obtain all of the rules and associated info.
