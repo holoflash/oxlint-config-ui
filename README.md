@@ -1,4 +1,4 @@
-### MVP for a oxlint rules UI
+### MVP for an oxlint rules UI
 
 ![screenshot](screenshot.png)
 
