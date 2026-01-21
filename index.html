@@ -2,12 +2,337 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>oxlint-config-ui-vite</title>
+    <title>oxlint-rules-ui</title>
+    <style>
+      :root {
+        --bg: #1e1e2e;
+        --fg: #cdd6f4;
+        --accent: #cba6f7;
+        --accent-alt: #89b4fa;
+        --border: #585b70;
+        --selection-bg: #f5e0dc;
+        --selection-fg: #11111b;
+        --surface: #313244;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .flex-row {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+      }
+
+      .tui-box {
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        position: relative;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        margin: 0 8px;
+      }
+
+      .tui-box:first-child {
+        margin-left: 0;
+      }
+      .tui-box:last-child {
+        margin-right: 0;
+      }
+
+      .tui-box.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 10px rgba(203, 166, 247, 0.1);
+      }
+
+      .tui-box.active .tui-title {
+        color: var(--accent);
+      }
+
+      .tui-title {
+        position: absolute;
+        top: -12px;
+        left: 14px;
+        background: var(--bg);
+        padding: 0 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        color: var(--border);
+      }
+
+      .list-container {
+        overflow-y: auto;
+        flex: 1;
+        padding: 12px 0;
+        scrollbar-width: none;
+      }
+
+      .list-item {
+        padding: 4px 16px;
+        cursor: pointer;
+        transition: all 0.1s ease;
+      }
+
+      .list-item.selected {
+        background-color: var(--accent);
+        color: var(--selection-fg);
+        font-weight: bold;
+      }
+
+      .details-content {
+        padding: 20px;
+        overflow-y: auto;
+        line-height: 1.6;
+      }
+
+      .prop-row {
+        margin-bottom: 8px;
+      }
+      .prop-key {
+        font-weight: bold;
+        color: var(--accent-alt);
+        margin-right: 8px;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid var(--surface);
+        margin: 15px 0;
+      }
+
+      a {
+        color: var(--accent-alt);
+        text-decoration: none;
+        background: var(--surface);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .status-bar {
+        margin-top: 15px;
+        padding: 8px 12px;
+        background: var(--surface);
+        border-radius: 6px;
+        color: var(--fg);
+        font-size: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        opacity: 0.8;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="flex-row h-full">
+      <div class="tui-box" id="pane-cats" style="width: 20%">
+        <div class="tui-title">Categories</div>
+        <div class="list-container" id="list-cats"></div>
+      </div>
+
+      <div class="tui-box" id="pane-rules" style="width: 30%">
+        <div class="tui-title">Rules</div>
+        <div class="list-container" id="list-rules"></div>
+      </div>
+
+      <div class="tui-box" id="pane-details" style="width: 50%">
+        <div class="tui-title">Details</div>
+        <div class="details-content" id="details-content">Loading...</div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span>[NAV]: Arrows / HJKL</span>
+      <span>[SWITCH PANE]: Arrows / Click</span>
+      <span id="rule-count">Rules: 0</span>
+    </div>
+
+    <script>
+      const state = {
+        rawRules: [],
+        categories: [],
+        rulesByCategory: {},
+        activePane: "cats",
+        catIndex: 0,
+        ruleIndex: 0,
+      };
+
+      const els = {
+        listCats: document.getElementById("list-cats"),
+        listRules: document.getElementById("list-rules"),
+        details: document.getElementById("details-content"),
+        paneCats: document.getElementById("pane-cats"),
+        paneRules: document.getElementById("pane-rules"),
+        ruleCount: document.getElementById("rule-count"),
+      };
+
+      const safeSort = (a, b) => {
+        const nameA = (a.name || a.id || "").toString().toLowerCase();
+        const nameB = (b.name || b.id || "").toString().toLowerCase();
+        return nameA.localeCompare(nameB);
+      };
+
+      async function init() {
+        try {
+          const res = await fetch("/api/rules");
+          const data = await res.json();
+
+          if (!Array.isArray(data)) throw new Error("Invalid data format");
+
+          state.rawRules = data;
+          processData(data);
+          render();
+        } catch (e) {
+          els.details.innerHTML = `<span style="color: #ff5555">Error: ${e.message}</span>`;
+        }
+      }
+
+      function processData(rules) {
+        const groups = {};
+
+        rules.forEach((rule) => {
+          const cat = rule.category || "Uncategorized";
+          if (!groups[cat]) groups[cat] = [];
+          groups[cat].push(rule);
+        });
+
+        state.categories = Object.keys(groups).sort();
+        state.categories.forEach((cat) => {
+          groups[cat].sort(safeSort);
+        });
+
+        state.rulesByCategory = groups;
+        els.ruleCount.textContent = `Rules: ${rules.length}`;
+      }
+
+      function render() {
+        renderList(els.listCats, state.categories, state.catIndex, "clickCat");
+
+        const currentCat = state.categories[state.catIndex];
+        const rules = state.rulesByCategory[currentCat] || [];
+
+        const ruleNames = rules.map((r) => r.value);
+        renderList(els.listRules, ruleNames, state.ruleIndex, "clickRule");
+
+        renderDetails(rules[state.ruleIndex]);
+        updateActivePane();
+      }
+
+      function renderList(container, items, selectedIndex, clickFnName) {
+        container.innerHTML = items
+          .map(
+            (item, i) => `
+        <div class="list-item ${i === selectedIndex ? "selected" : ""}" 
+             onclick="${clickFnName}(${i})">
+          ${item}
+        </div>
+      `,
+          )
+          .join("");
+
+        // Auto Scroll
+        const selectedEl = container.children[selectedIndex];
+        if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
+      }
+
+      function renderDetails(rule) {
+        if (!rule) {
+          els.details.innerHTML =
+            '<span style="color:#666">No rule selected</span>';
+          return;
+        }
+        console.log(rule);
+
+        els.details.innerHTML = `
+        <div class="prop-row"><span class="prop-key">Name:</span> ${rule.value || "N/A"}</div>
+        <div class="prop-row"><span class="prop-key">Category:</span> ${rule.category || "N/A"}</div>
+        <div class="prop-row"><span class="prop-key">Scope:</span> ${rule.scope || "N/A"}</div>
+        <div class="prop-row"><span class="prop-key">Default:</span> ${rule.default}</div>
+        <div class="prop-row"><span class="prop-key">Type Aware:</span> ${rule.type_aware}</div>
+        <div class="prop-row"><span class="prop-key">Fix:</span> ${rule.fix}</div>
+        <br>
+        <div class="prop-row"><span class="prop-key">Docs:</span></div>
+        <a href="${rule.docs_url}" target="_blank">${rule.docs_url}</a>
+
+        <br>
+        <p> Navigate using
+      `;
+      }
+
+      function updateActivePane() {
+        els.paneCats.classList.toggle("active", state.activePane === "cats");
+        els.paneRules.classList.toggle("active", state.activePane === "rules");
+      }
+
+      window.clickCat = (i) => {
+        state.catIndex = i;
+        state.ruleIndex = 0;
+        state.activePane = "cats";
+        render();
+      };
+
+      window.clickRule = (i) => {
+        state.ruleIndex = i;
+        state.activePane = "rules";
+        render();
+      };
+
+      document.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+
+        if (["arrowright", "l"].includes(key)) {
+          e.preventDefault();
+          state.activePane = "rules";
+          render();
+          return;
+        }
+        if (["arrowleft", "h"].includes(key)) {
+          state.activePane = "cats";
+          render();
+          return;
+        }
+
+        const isCats = state.activePane === "cats";
+        const listLen = isCats
+          ? state.categories.length
+          : state.rulesByCategory[state.categories[state.catIndex]]?.length ||
+            0;
+
+        if (["arrowdown", "j"].includes(key)) {
+          if (isCats) {
+            state.catIndex = Math.min(state.catIndex + 1, listLen - 1);
+            state.ruleIndex = 0;
+          } else {
+            state.ruleIndex = Math.min(state.ruleIndex + 1, listLen - 1);
+          }
+          render();
+        }
+        if (["arrowup", "k"].includes(key)) {
+          if (isCats) {
+            state.catIndex = Math.max(state.catIndex - 1, 0);
+            state.ruleIndex = 0;
+          } else {
+            state.ruleIndex = Math.max(state.ruleIndex - 1, 0);
+          }
+          render();
+        }
+      });
+
+      init();
+    </script>
   </body>
 </html>
