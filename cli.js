@@ -11,7 +11,7 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PORT = 0;
+const PORT = 1337;
 
 const getRules = async () => {
     try {
@@ -24,35 +24,23 @@ const getRules = async () => {
 };
 
 const server = createServer(async (req, res) => {
-    if (req.url === '/api/rules') {
+    try {
         const rules = await getRules();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(rules));
-        return;
-    }
+        let html = await readFile(join(__dirname, 'index.html'), 'utf-8');
+        const dataString = JSON.stringify(rules);
+        html = html.replace('/* [[INJECT_DATA]] */ []', dataString);
 
-    if (req.url === '/' || req.url === '/index.html') {
-        try {
-            const html = await readFile(join(__dirname, 'index.html'), 'utf-8');
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(html);
-        } catch (err) {
-            res.writeHead(500);
-            res.end('Missing index.html');
-        }
-        return;
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(html);
+    } catch (err) {
+        console.error(err);
+        res.writeHead(500);
+        res.end('Internal Server Error: ' + err.message);
     }
-
-    res.writeHead(404);
-    res.end('Not Found');
+    return;
 });
 
 server.listen(PORT, () => {
-    const port = server.address().port;
-    const url = `http://localhost:${port}`;
-
+    const url = `http://localhost:${PORT}`;
     console.log(`OxLint Rules UI running at: ${url}`);
-    // Try to open browser if possible
-    const start = (process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open');
-    exec(`${start} ${url}`);
 });

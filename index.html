@@ -40,12 +40,6 @@
         min-height: 0;
       }
 
-      .flex-row {
-        display: flex;
-        flex-direction: row;
-        height: 100%;
-      }
-
       .tui-box {
         border: 2px solid var(--border);
         border-radius: 8px;
@@ -172,6 +166,8 @@
     </div>
 
     <script>
+      window.__RULES__ = /* [[INJECT_DATA]] */ [];
+
       const state = {
         rawRules: [],
         categories: [],
@@ -196,12 +192,16 @@
         return nameA.localeCompare(nameB);
       };
 
-      async function init() {
+      function init() {
         try {
-          const res = await fetch("/api/rules");
-          const data = await res.json();
+          const data = window.__RULES__;
 
-          if (!Array.isArray(data)) throw new Error("Invalid data format");
+          if (!Array.isArray(data)) {
+            if (data === null || data === undefined) {
+              throw new Error("No data injected from server.");
+            }
+            throw new Error("Invalid data format received.");
+          }
 
           state.rawRules = data;
           processData(data);
@@ -230,7 +230,13 @@
       }
 
       function render() {
-        renderList(els.listCats, state.categories, state.catIndex, "clickCat");
+        renderList(
+          els.listCats,
+          state.categories,
+          state.catIndex,
+          "clickCat",
+          true,
+        );
 
         const currentCat = state.categories[state.catIndex];
         const rules = state.rulesByCategory[currentCat] || [];
@@ -242,8 +248,13 @@
         updateActivePane();
       }
 
-      function renderList(container, items, selectedIndex, clickFnName) {
-        // Clear previous children
+      function renderList(
+        container,
+        items,
+        selectedIndex,
+        clickFnName,
+        isCat = false,
+      ) {
         while (container.firstChild) {
           container.removeChild(container.firstChild);
         }
@@ -251,19 +262,19 @@
           const div = document.createElement("div");
           div.className =
             "list-item" + (i === selectedIndex ? " selected" : "");
-          div.textContent = item;
+          div.textContent = isCat
+            ? `${item} (${state.rulesByCategory[item]?.length || 0})`
+            : `${i + 1}. ${item}`;
           div.onclick = () => {
             window[clickFnName](i);
           };
           container.appendChild(div);
         });
-        // Auto Scroll
         const selectedEl = container.children[selectedIndex];
         if (selectedEl) selectedEl.scrollIntoView({ block: "nearest" });
       }
 
       function renderDetails(rule) {
-        // Clear previous content
         els.details.textContent = "";
         if (!rule) {
           const span = document.createElement("span");
@@ -401,19 +412,19 @@
 
         if (["arrowdown", "j"].includes(key)) {
           if (isCats) {
-            state.catIndex = Math.min(state.catIndex + 1, listLen - 1);
+            state.catIndex = (state.catIndex + 1) % listLen;
             state.ruleIndex = 0;
           } else {
-            state.ruleIndex = Math.min(state.ruleIndex + 1, listLen - 1);
+            state.ruleIndex = (state.ruleIndex + 1) % listLen;
           }
           render();
         }
         if (["arrowup", "k"].includes(key)) {
           if (isCats) {
-            state.catIndex = Math.max(state.catIndex - 1, 0);
+            state.catIndex = (state.catIndex - 1 + listLen) % listLen;
             state.ruleIndex = 0;
           } else {
-            state.ruleIndex = Math.max(state.ruleIndex - 1, 0);
+            state.ruleIndex = (state.ruleIndex - 1 + listLen) % listLen;
           }
           render();
         }

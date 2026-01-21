@@ -11,7 +11,7 @@
     "index.html"
   ],
   "scripts": {
-    "start": "node cli.js"
+    "start": "node --watch cli.js"
   },
   "dependencies": {
     "oxlint": "latest"
