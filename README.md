@@ -1,14 +1,13 @@
-### MVP for an oxlint rules UI
+# oxlint-rules-tui
+
+A lightweight, dependency-free Node.js Terminal User Interface for browsing [oxlint](https://github.com/oxc-project/oxc) rules.
 
 ![screenshot](screenshot.png)
 
-Run locally:
-```bash
-npm install
-```
-And then:
-```bash
-npm run start
-```
+## Usage
 
-Uses `oxlint --rules --format=json` to obtain all of the rules and associated info.
+Run the command in your terminal:
+
+```bash
+npm run tui
+```
