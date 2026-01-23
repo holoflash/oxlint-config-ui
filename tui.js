@@ -96,21 +96,34 @@ function runLint(type_aware) {
         : `npx -q --yes --package oxlint@${OXLINT_VERSION} -- oxlint`;
 
     exec(cmd, (error, stdout, stderr) => {
-        const summaryMatch = stdout.match(/Found (\d+) warnings? and (\d+) errors?/i);
-
         state.isLinting = false;
+
+        const summaryMatch = stdout.match(/Found (\d+) warnings? and (\d+) errors?/i);
 
         if (summaryMatch) {
             state.message = summaryMatch[0].trim();
             const errors = parseInt(summaryMatch[2]);
             state.messageType = errors > 0 ? "error" : "warn";
-        } else if (!error || (error.code === 0)) {
+        }
+        else if (stdout.includes("Finished") || (!error && stdout.trim() === "")) {
             state.message = "Linting passed! 0 issues found.";
             state.messageType = "success";
-        } else {
-            state.message = `Error: ${stderr.split('\n')[0] || "Unknown issue"}`;
+        }
+        else if (error || stderr.trim().length > 0) {
+            const realErrors = stderr
+                .split('\n')
+                .filter(line => !line.includes("JS plugins are experimental"))
+                .join(' ')
+                .trim();
+
+            state.message = realErrors ? `Error: ${realErrors.substring(0, 50)}` : "Linting failed";
             state.messageType = "error";
         }
+        else {
+            state.message = "Unknown state";
+            state.messageType = "dim";
+        }
+
         render();
     });
 }
