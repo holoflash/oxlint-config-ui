@@ -117,6 +117,10 @@ function getRuleStatus(ruleName, category, config) {
     return 'off';
 }
 
+function stripJsonComments(json) {
+    return json.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
+}
+
 function loadRules() {
     let rulesData;
     let config = { rules: {}, categories: {} };
@@ -145,7 +149,9 @@ function loadRules() {
     if (configPathToLoad) {
         try {
             const configFile = fs.readFileSync(configPathToLoad, 'utf8');
-            config = JSON.parse(configFile);
+            const cleanConfig = stripJsonComments(configFile);
+            config = JSON.parse(cleanConfig);
+
         } catch (e) {
             console.error(`${COLORS.error}Error: Failed to parse '${configPathToLoad}'.${COLORS.reset}`);
             console.error(`${COLORS.warn}${e.message}${COLORS.reset}`);
@@ -171,7 +177,6 @@ function loadRules() {
 
         const categories = Object.keys(map).sort();
 
-        // Sort rules - active first, then Alphabetical
         categories.forEach(c => {
             map[c].sort((a, b) => {
                 if (a.isActive && !b.isActive) return -1;
