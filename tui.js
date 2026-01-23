@@ -92,28 +92,25 @@ function runLint(type_aware) {
     render();
 
     const cmd = type_aware
-        ? `npx --yes -p oxlint@${OXLINT_VERSION} -p oxlint-tsgolint@${TSGOLINT_VERSION} oxlint --type-aware`
-        : `npx --yes oxlint@${OXLINT_VERSION}`;
+        ? `npx -q --yes --package oxlint@${OXLINT_VERSION} --package oxlint-tsgolint@${TSGOLINT_VERSION} -- oxlint --type-aware`
+        : `npx -q --yes --package oxlint@${OXLINT_VERSION} -- oxlint`;
 
     exec(cmd, (error, stdout, stderr) => {
         const fullOutput = stdout + stderr;
-        const summaryMatch = fullOutput.match(
-            /Found (\d+) warnings? and (\d+) errors?/,
-        );
+
+        const summaryMatch = fullOutput.match(/Found (\d+) warnings? and (\d+) errors?/i);
 
         state.isLinting = false;
+
         if (summaryMatch) {
-            state.message = summaryMatch[0];
+            state.message = summaryMatch[0].trim();
             const errors = parseInt(summaryMatch[2]);
             state.messageType = errors > 0 ? "error" : "warn";
-        } else if (
-            fullOutput.includes("Finished") ||
-            (!error && fullOutput.length === 0)
-        ) {
+        } else if (!error || (error.code === 0)) {
             state.message = "Linting passed! 0 issues found.";
             state.messageType = "success";
         } else {
-            state.message = "Something went wrong";
+            state.message = `Error: ${stderr.split('\n')[0] || "Unknown issue"}`;
             state.messageType = "error";
         }
         render();
@@ -241,7 +238,7 @@ function loadRules() {
 
     try {
         const raw = execSync(
-            `npx --yes oxlint@${OXLINT_VERSION} --rules --format=json`,
+            `npx -q --yes oxlint@${OXLINT_VERSION} --rules --format=json`,
             {
                 encoding: "utf8",
                 stdio: ["ignore", "pipe", "ignore"],
