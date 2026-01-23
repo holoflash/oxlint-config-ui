@@ -38,6 +38,7 @@ const KEY_MAP = {
   q: { type: "EXIT" },
   r: { type: "RUN_LINT" },
   t: { type: "RUN_TYPE_AWARE_LINT" },
+  x: { type: "RUN_SINGLE_RULE" },
 };
 
 let state = {
@@ -81,19 +82,40 @@ function updateConfig(rule, newStatus) {
   }
 }
 
-function runLint(type_aware) {
+function runLint({ typeAware = false, rule = null } = {}) {
   if (state.isLinting) return;
 
   state.isLinting = true;
-  state.message = type_aware ? "Linting with --type-aware..." : "Linting...";
+
+  let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
+  typeAware = typeAware || rule?.type_aware;
+
+  state.message = "Linting";
+  if (ruleName) state.message += ` [${ruleName}]`;
+  if (typeAware) state.message += " with --type-aware";
+  state.message += "...";
+
   state.messageType = "info";
+
   render();
 
   const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
 
-  const args = type_aware
-    ? ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`, "--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`, "--", "oxlint", "--type-aware",]
-    : ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`, "--", "oxlint"];
+  const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
+
+  if (typeAware) {
+    args.push("--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`);
+  }
+
+  args.push("--", "oxlint");
+
+  if (typeAware) {
+    args.push("--type-aware");
+  }
+
+  if (ruleName) {
+    args.push("-A", "all", "-D", ruleName);
+  }
 
   const child = spawn(npxCmd, args);
 
@@ -116,14 +138,17 @@ function runLint(type_aware) {
     );
 
     if (summaryMatch) {
-      state.message = summaryMatch[0];
       const errors = parseInt(summaryMatch[2]);
+      state.message = ruleName
+        ? `[${ruleName}] Found ${errors} issue${errors === 1 ? "" : "s"}`
+        : (state.message = summaryMatch[0]);
       state.messageType = errors > 0 ? "error" : "warn";
     } else if (
       stdoutData.toLowerCase().includes("finished") ||
       (code === 0 && stdoutData.length < 200)
     ) {
       state.message = "Linting passed! 0 issues found.";
+      if (ruleName) state.message = `[${ruleName}] ${state.message}`;
       state.messageType = "success";
     } else {
       const cleanError = stderrData
@@ -145,7 +170,9 @@ function runLint(type_aware) {
   });
 }
 
-function reducer(state, action) {
+function execute(action) {
+  if (!action) return;
+
   const {
     categories,
     rulesByCategory,
@@ -160,10 +187,33 @@ function reducer(state, action) {
   const catViewHeight = viewHeight - statsHeight;
 
   switch (action.type) {
-    case "SET_STATUS": {
-      if (activePane !== 1) return state;
+    case "EXIT":
+      exitAltScreen();
+      exit(0);
+      return;
+
+    case "RUN_LINT":
+      runLint();
+      return;
+
+    case "RUN_SINGLE_RULE": {
       const rule = currentRules[selectedRuleIdx];
-      if (!rule) return state;
+      if (rule) runLint({ rule });
+      return;
+    }
+
+    case "OPEN_DOCS": {
+      if (activePane === 1) {
+        const rule = currentRules[selectedRuleIdx];
+        if (rule) openUrl(rule.docs_url || rule.url);
+      }
+      return;
+    }
+
+    case "SET_STATUS": {
+      if (activePane !== 1) return;
+      const rule = currentRules[selectedRuleIdx];
+      if (!rule) return;
       updateConfig(rule, action.value);
       const updatedRules = [...currentRules];
       updatedRules[selectedRuleIdx] = {
@@ -171,7 +221,7 @@ function reducer(state, action) {
         configStatus: action.value,
         isActive: action.value === "error" || action.value === "warn",
       };
-      return {
+      state = {
         ...state,
         message: `Rule '${rule.value}' set to: ${action.value}`,
         messageType: "info",
@@ -180,19 +230,29 @@ function reducer(state, action) {
           [currentCat]: updatedRules,
         },
       };
+      render();
+      return;
     }
+
     case "MOVE_RIGHT":
-      if (activePane !== 1) return { ...state, activePane: activePane + 1 };
-      return state;
+      if (activePane !== 1) {
+        state = { ...state, activePane: activePane + 1 };
+        render();
+      }
+      return;
 
     case "MOVE_LEFT":
-      if (activePane !== 0) return { ...state, activePane: activePane - 1 };
-      return state;
+      if (activePane !== 0) {
+        state = { ...state, activePane: activePane - 1 };
+        render();
+      }
+      return;
+
     case "MOVE_UP":
       if (activePane === 0) {
         const nextIdx =
           selectedCatIdx === 0 ? categories.length - 1 : selectedCatIdx - 1;
-        return {
+        state = {
           ...state,
           selectedCatIdx: nextIdx,
           selectedRuleIdx: 0,
@@ -202,18 +262,20 @@ function reducer(state, action) {
       } else if (activePane === 1) {
         const nextIdx =
           selectedRuleIdx === 0 ? currentRules.length - 1 : selectedRuleIdx - 1;
-        return {
+        state = {
           ...state,
           selectedRuleIdx: nextIdx,
           scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
         };
       }
-      return state;
+      render();
+      return;
+
     case "MOVE_DOWN":
       if (activePane === 0) {
         const nextIdx =
           selectedCatIdx === categories.length - 1 ? 0 : selectedCatIdx + 1;
-        return {
+        state = {
           ...state,
           selectedCatIdx: nextIdx,
           selectedRuleIdx: 0,
@@ -223,15 +285,14 @@ function reducer(state, action) {
       } else if (activePane === 1) {
         const nextIdx =
           selectedRuleIdx === currentRules.length - 1 ? 0 : selectedRuleIdx + 1;
-        return {
+        state = {
           ...state,
           selectedRuleIdx: nextIdx,
           scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
         };
       }
-      return state;
-    default:
-      return state;
+      render();
+      return;
   }
 }
 
@@ -292,7 +353,7 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) { }
+    } catch (e) {}
   }
 
   const map = {};
@@ -553,7 +614,7 @@ function render() {
     ? `Config: ${state.configPath}`
     : "No config loaded";
   buffer.push(
-    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
+    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | X: Run rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
   );
   write(buffer.join(""));
 }
@@ -567,29 +628,7 @@ stdin.on("keypress", (_, key) => {
     (key.ctrl && key.name === "c"
       ? { type: "EXIT" }
       : KEY_MAP[key.sequence] || null);
-  if (!action) return;
-
-  if (action.type === "EXIT") {
-    exitAltScreen();
-    exit(0);
-  }
-  if (action.type === "RUN_LINT") {
-    runLint(false);
-    return;
-  }
-  if (action.type === "RUN_TYPE_AWARE_LINT") {
-    runLint(true);
-    return;
-  }
-  if (action.type === "OPEN_DOCS" && state.activePane === 1) {
-    const currentCat = state.categories[state.selectedCatIdx];
-    const rule = state.rulesByCategory[currentCat]?.[state.selectedRuleIdx];
-    if (rule) openUrl(rule.docs_url || rule.url);
-    return;
-  }
-
-  state = reducer(state, action);
-  render();
+  execute(action);
 });
 
 stdout.on("resize", render);
