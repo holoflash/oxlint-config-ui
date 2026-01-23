@@ -1,8 +1,10 @@
 # oxlint-tui
 
-A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling and visualizing [oxlint](https://github.com/oxc-project/oxc) rules.
+A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling and visualizing [oxlint](https://github.com/oxc-project/oxc) rules and the number of warnings/errors they produce when toggled ON.
 
 It automatically loads your local configuration to show you the status of the rules toggled in your project and allows you to toggle them by selecting a rule in the Rules pane and pressing <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>. The config file is modified in real-time.
+
+Pressing <kbd>r</kbd> will lint the project using "oxlint". Pressing <kbd>t</kbd> will lint include the oxlint-tsgolint package and lint the project using "oxlint --type-aware". The results are presented directly in the interface.
 
 **NOTE**: At the moment, comments will be erased from your configuration file when adding or toggling rules.
 
@@ -58,6 +60,8 @@ oxlint-tui
 | **1** |  Set selected rule to "off" |
 | **2** |  Set selected rule to "warn" |
 | **3** |  Set selected rule to "error" |
+| **r** |  Run the linter with "oxlint" |
+| **t** |  Run the linter with "-p oxlint-tsgolint@latest oxlint --type-aware" |
 | **Enter** | Open Rule Documentation in Browser |
 | **q** / **Esc** | Quit |
 
