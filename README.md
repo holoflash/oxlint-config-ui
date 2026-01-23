@@ -62,9 +62,8 @@ oxlint-tui
 | **1** |  Set selected rule to "off" |
 | **2** |  Set selected rule to "warn" |
 | **3** |  Set selected rule to "error" |
-| **x** |  Run the selected rule |
-| **r** |  Run all enabled rules with "oxlint" |
-| **t** |  Run all enabled rules with "-p oxlint-tsgolint@latest oxlint --type-aware" |
+| **x** |  Run "oxlint" with the selected rule |
+| **r** |  Run "oxlint with all enabled rules |
 | **Enter** | Open Rule Documentation in Browser |
 | **q** / **Esc** | Quit |
 

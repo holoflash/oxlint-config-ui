@@ -37,7 +37,6 @@ const KEY_MAP = {
   3: { type: "SET_STATUS", value: "error" },
   q: { type: "EXIT" },
   r: { type: "RUN_LINT" },
-  t: { type: "RUN_TYPE_AWARE_LINT" },
   x: { type: "RUN_SINGLE_RULE" },
 };
 
@@ -353,7 +352,7 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const map = {};
@@ -614,7 +613,7 @@ function render() {
     ? `Config: ${state.configPath}`
     : "No config loaded";
   buffer.push(
-    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | X: Run rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
+    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | X: Run rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
   );
   write(buffer.join(""));
 }
