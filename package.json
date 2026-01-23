@@ -1,6 +1,6 @@
 {
   "name": "oxlint-tui",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "A Node TUI Oxlint rules and configuration browser",
   "type": "module",
   "bin": {
