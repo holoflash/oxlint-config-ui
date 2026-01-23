@@ -2,6 +2,8 @@
 
 A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling and visualizing [oxlint](https://github.com/oxc-project/oxc) rules and the number of warnings/errors they produce when toggled ON.
 
+![oxlint-tui-demo](https://github.com/user-attachments/assets/cefd05a6-8bda-4622-8adf-008402f856b4)
+
 It automatically loads your local configuration to show you the status of the rules toggled in your project and allows you to toggle them by selecting a rule in the Rules pane and pressing <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>. The config file is modified in real-time.
 
 Pressing <kbd>r</kbd> will lint the project using "oxlint". Pressing <kbd>t</kbd> will lint include the oxlint-tsgolint package and lint the project using "oxlint --type-aware". The results are presented directly in the interface.
