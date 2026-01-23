@@ -4,7 +4,7 @@ A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsin
 
 It automatically loads your local configuration to show you the status of the rules toggled in your project.
 
-![screenshot](screenshot.png)
+![screenshot](https://raw.githubusercontent.com/holoflash/oxlint-config-ui/refs/heads/main/screenshot.png)
 
 ## Why?
 
