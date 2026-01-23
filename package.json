@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "start": "node tui.js",
-    "test:config": "node tui.js .oxlintrc.example.json"
+    "dev": "node tui.js .oxlintrc.example.json"
   },
   "keywords": [
     "oxlint",

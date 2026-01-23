@@ -17,11 +17,6 @@ Configuring linters often involves jumping between your editor, a massive JSON f
 * **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
 * **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
 
-## Important note
-
-Documentation links and information about fixability are not available in older versions of oxlint.
-This tool was developed using oxlint version 1.41.0.
-
 ## Usage
 
 ### Quick Start (via npx)

@@ -5,6 +5,8 @@ import { stdout, stdin, exit, platform, argv } from 'node:process';
 import readline from 'node:readline';
 import fs from 'node:fs';
 
+const OXLINT_VERSION = "1.41.0"
+
 const COLORS = {
     reset: '\x1b[0m',
     dim: '\x1b[90m',
@@ -43,7 +45,8 @@ function reducer(state, action) {
 
     switch (action.type) {
         case 'MOVE_RIGHT':
-            return { ...state, activePane: Math.min(2, activePane + 1) };
+            if (activePane !== 1)
+                return { ...state, activePane: Math.min(2, activePane + 1) };
 
         case 'MOVE_LEFT':
             return { ...state, activePane: Math.max(0, activePane - 1) };
@@ -126,7 +129,7 @@ function loadRules() {
     let config = { rules: {}, categories: {} };
 
     try {
-        const raw = execSync('npx oxlint --rules --format=json', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+        const raw = execSync(`npx --yes oxlint@${OXLINT_VERSION} --rules --format=json`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
         rulesData = JSON.parse(raw);
     } catch (e) {
         console.error(`${COLORS.error}Error: Could not run 'npx oxlint'. Ensure oxlint is installed.${COLORS.reset}`);
