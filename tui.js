@@ -37,7 +37,6 @@ const KEY_MAP = {
     q: { type: "EXIT" },
     r: { type: "RUN_LINT" },
     t: { type: "RUN_TYPE_AWARE_LINT" },
-    escape: { type: "EXIT" },
 };
 
 let state = {
@@ -47,7 +46,7 @@ let state = {
     scrollCat: 0,
     scrollRule: 0,
     isLinting: false,
-    message: "Press R to lint; T to lint using --type-aware",
+    message: "oxlint-tui",
     messageType: "dim",
     ...loadRules(),
 };
@@ -526,7 +525,7 @@ function render() {
         ? `Config: ${state.configPath}`
         : "No config loaded";
     buffer.push(
-        `\x1b[${rows - 1};2H${COLORS.dim}Arrows: Nav | 1-3: Status | Space: Lint | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
+        `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
     );
     write(buffer.join(""));
 }
