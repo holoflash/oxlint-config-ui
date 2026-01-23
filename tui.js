@@ -85,7 +85,7 @@ function runLint(type_aware) {
   if (state.isLinting) return;
 
   state.isLinting = true;
-  state.message = type_aware ? "Linting with --type-aware)..." : "Linting...";
+  state.message = type_aware ? "Linting with --type-aware..." : "Linting...";
   state.messageType = "info";
   render();
 
