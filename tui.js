@@ -6,6 +6,7 @@ import readline from "readline";
 import fs from "node:fs";
 
 const OXLINT_VERSION = "1.41.0";
+const TSGOLINT_VERSION = "0.11.1";
 
 const COLORS = {
     reset: "\x1b[0m",
@@ -90,7 +91,9 @@ function runLint(type_aware) {
     state.messageType = "info";
     render();
 
-    const cmd = `npx -p oxlint@${OXLINT_VERSION} ${type_aware ? "-p oxlint-tsgolint@latest oxlint --type-aware" : "oxlint"}`;
+    const cmd = type_aware
+        ? `npx --yes -p oxlint@${OXLINT_VERSION} -p oxlint-tsgolint@${TSGOLINT_VERSION} oxlint --type-aware`
+        : `npx --yes oxlint@${OXLINT_VERSION}`;
 
     exec(cmd, (error, stdout, stderr) => {
         const fullOutput = stdout + stderr;
