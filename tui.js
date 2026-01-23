@@ -38,6 +38,7 @@ const KEY_MAP = {
   q: { type: "EXIT" },
   r: { type: "RUN_LINT" },
   t: { type: "RUN_TYPE_AWARE_LINT" },
+  x: { type: "RUN_SINGLE_RULE" },
 };
 
 let state = {
@@ -81,19 +82,40 @@ function updateConfig(rule, newStatus) {
   }
 }
 
-function runLint(type_aware) {
+function runLint({ typeAware = false, rule = null } = {}) {
   if (state.isLinting) return;
 
   state.isLinting = true;
-  state.message = type_aware ? "Linting with --type-aware..." : "Linting...";
+
+  let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
+  typeAware = typeAware || rule.type_aware;
+
+  state.message = "Linting";
+  if (ruleName) state.message += ` [${ruleName}]`;
+  if (typeAware) state.message += " with --type-aware";
+  state.message += "...";
+
   state.messageType = "info";
+
   render();
 
   const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
 
-  const args = type_aware
-    ? ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`, "--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`, "--", "oxlint", "--type-aware",]
-    : ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`, "--", "oxlint"];
+  const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
+
+  if (typeAware) {
+    args.push("--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`);
+  }
+
+  args.push("--", "oxlint");
+
+  if (typeAware) {
+    args.push("--type-aware");
+  }
+
+  if (ruleName) {
+    args.push("-A", "all", "-D", ruleName);
+  }
 
   const child = spawn(npxCmd, args);
 
@@ -116,14 +138,17 @@ function runLint(type_aware) {
     );
 
     if (summaryMatch) {
-      state.message = summaryMatch[0];
       const errors = parseInt(summaryMatch[2]);
+      state.message = ruleName
+        ? `[${ruleName}] Found ${errors} issue${errors === 1 ? "" : "s"}`
+        : (state.message = summaryMatch[0]);
       state.messageType = errors > 0 ? "error" : "warn";
     } else if (
       stdoutData.toLowerCase().includes("finished") ||
       (code === 0 && stdoutData.length < 200)
     ) {
       state.message = "Linting passed! 0 issues found.";
+      if (ruleName) state.message = `[${ruleName}] ${state.message}`;
       state.messageType = "success";
     } else {
       const cleanError = stderrData
@@ -292,7 +317,7 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) { }
+    } catch (e) {}
   }
 
   const map = {};
@@ -553,7 +578,7 @@ function render() {
     ? `Config: ${state.configPath}`
     : "No config loaded";
   buffer.push(
-    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
+    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | T: Lint with --type-aware | X: Run rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
   );
   write(buffer.join(""));
 }
@@ -574,11 +599,17 @@ stdin.on("keypress", (_, key) => {
     exit(0);
   }
   if (action.type === "RUN_LINT") {
-    runLint(false);
+    runLint();
     return;
   }
   if (action.type === "RUN_TYPE_AWARE_LINT") {
-    runLint(true);
+    runLint({ typeAware: true });
+    return;
+  }
+  if (action.type === "RUN_SINGLE_RULE") {
+    const currentCat = state.categories[state.selectedCatIdx];
+    const rule = state.rulesByCategory[currentCat]?.[state.selectedRuleIdx];
+    if (rule) runLint({ rule });
     return;
   }
   if (action.type === "OPEN_DOCS" && state.activePane === 1) {
