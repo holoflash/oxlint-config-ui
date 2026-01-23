@@ -1,12 +1,26 @@
 {
-  "name": "oxlint-rules-tui",
+  "name": "oxlint-tui",
   "version": "1.0.0",
-  "description": "A Node TUI Oxlint Rules browser",
+  "description": "A Node TUI Oxlint rules and configuration browser",
   "type": "module",
-  "author": "holoflash",
-  "scripts": {
-    "tui": "node tui.js .oxlintrc.example.json"
+  "bin": {
+    "oxlint-rules-tui": "./tui.js"
   },
+  "files": [
+    "tui.js"
+  ],
+  "scripts": {
+    "start": "node tui.js",
+    "test:config": "node tui.js .oxlintrc.example.json"
+  },
+  "keywords": [
+    "oxlint",
+    "lint",
+    "tui",
+    "cli"
+  ],
+  "author": "holoflash",
+  "license": "MIT",
   "engines": {
     "node": ">=16"
   }
