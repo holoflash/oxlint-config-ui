@@ -192,6 +192,12 @@ function execute(action) {
       return;
 
     case "RUN_LINT":
+      const allRules = Object.values(state.rulesByCategory).flat();
+      const hasActiveTypeAwareRule = allRules.some(
+        (rule) => rule.isActive && rule.type_aware === true
+      );
+
+      runLint({ typeAware: hasActiveTypeAwareRule });
       runLint();
       return;
 

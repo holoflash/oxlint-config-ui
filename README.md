@@ -6,8 +6,6 @@ A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsin
 
 It automatically loads your local configuration to show you the status of the rules toggled in your project and allows you to toggle them by selecting a rule in the Rules pane and pressing <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>. The config file is modified in real-time.
 
-Pressing <kbd>r</kbd> will lint the project using "oxlint". Pressing <kbd>t</kbd> will lint include the oxlint-tsgolint package and lint the project using "oxlint --type-aware". The results are presented directly in the interface.
-
 **NOTE**: At the moment, comments will be erased from your configuration file when adding or toggling rules.
 
 ![screenshot](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot.png)
