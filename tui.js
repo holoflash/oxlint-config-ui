@@ -96,9 +96,7 @@ function runLint(type_aware) {
         : `npx -q --yes --package oxlint@${OXLINT_VERSION} -- oxlint`;
 
     exec(cmd, (error, stdout, stderr) => {
-        const fullOutput = stdout + stderr;
-
-        const summaryMatch = fullOutput.match(/Found (\d+) warnings? and (\d+) errors?/i);
+        const summaryMatch = stdout.match(/Found (\d+) warnings? and (\d+) errors?/i);
 
         state.isLinting = false;
 
