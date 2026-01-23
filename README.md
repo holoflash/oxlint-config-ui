@@ -1,8 +1,10 @@
 # oxlint-tui
 
-A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing and visualizing [oxlint](https://github.com/oxc-project/oxc) rules.
+A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling and visualizing [oxlint](https://github.com/oxc-project/oxc) rules.
 
-It automatically loads your local configuration to show you the status of the rules toggled in your project.
+It automatically loads your local configuration to show you the status of the rules toggled in your project and allows you to toggle them by selecting a rule in the Rules pane and pressing <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>. The config file is modified in real-time.
+
+**NOTE**: At the moment, comments will be erased from your configuration file when adding or toggling rules.
 
 ![screenshot](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot.png)
 
@@ -52,7 +54,10 @@ oxlint-tui
 | **↑** / **k** | Move selection Up |
 | **↓** / **j** | Move selection Down |
 | **←** / **h** | Move focus Left (Categories <-> Rules) |
-| **→** / **l** | Move focus Right (Categories <-> Rules) |
+| **→** / **l** | Move focus Right (Categories <-> Rules) ||
+| **1** |  Set selected rule to "off" |
+| **2** |  Set selected rule to "warn" |
+| **3** |  Set selected rule to "error" |
 | **Enter** | Open Rule Documentation in Browser |
 | **q** / **Esc** | Quit |
 
@@ -63,7 +68,7 @@ oxlint-tui
 
 ## Roadmap
 
-The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file -  but also allows to create the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
+The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file -  but also allows to fully customize the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
 
 If you're willing and able, please feel free to [contribute to this project](https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md).
 
