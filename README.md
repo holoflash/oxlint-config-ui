@@ -8,7 +8,7 @@ It automatically loads your local configuration to show you the status of the ru
 
 ## Why?
 
-To make browsing available rules when easier and to provide quick access to documentation straight from the terminal.
+Configuring linters often involves jumping between your editor, a massive JSON file, and web documentation. `oxlint-tui` tries to make the process easier by giving you an **interactive dashboard** right in your terminal.
 
 ## Features
 
