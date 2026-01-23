@@ -70,8 +70,7 @@ oxlint-tui
 
 The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file -  but also allows to create the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
 
-If you're willing and able, please feel free to contribute to this project and help expanding it.
-(CONTRIBUTING.md)[https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md]
+If you're willing and able, please feel free to [contribute to this project](https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md).
 
 ## License
 
