@@ -9,5 +9,7 @@ A lightweight, dependency-free Node.js Terminal User Interface for browsing [oxl
 Run the command in your terminal:
 
 ```bash
-npm run tui
+node tui.js < path to .oxlintrc.json >
 ```
+
+If no path argument is provided, tries to read `.oxlintrc.json` in the running directory.

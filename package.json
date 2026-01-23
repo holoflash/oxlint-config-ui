@@ -4,14 +4,8 @@
   "description": "A Node TUI Oxlint Rules browser",
   "type": "module",
   "author": "holoflash",
-  "bin": {
-    "oxlint-rules-ui": "./tui.js"
-  },
-  "files": [
-    "cli.js"
-  ],
   "scripts": {
-    "tui": "node tui.js"
+    "tui": "node tui.js .oxlintrc.example.json"
   },
   "engines": {
     "node": ">=16"
