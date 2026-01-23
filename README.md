@@ -17,9 +17,14 @@ Configuring linters often involves jumping between your editor, a massive JSON f
 * **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
 * **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
 
+## Important note
+
+Documentation links and information about fixability are not available in older versions of oxlint.
+This tool was developed using oxlint version 1.41.0.
+
 ## Usage
 
-### 🚀 Quick Start (via npx)
+### Quick Start (via npx)
 
 Run it directly in your project folder (where your `.oxlintrc.json` is located):
 
@@ -27,7 +32,7 @@ Run it directly in your project folder (where your `.oxlintrc.json` is located):
 npx oxlint-tui
 ```
 
-### 📂 Custom Config Path
+### Custom Config Path
 
 If your configuration file is located elsewhere or named differently:
 
@@ -35,7 +40,7 @@ If your configuration file is located elsewhere or named differently:
 npx oxlint-tui ./configs/oxlint.json
 ```
 
-### 📦 Global Install
+### Global Install
 
 If you use oxlint frequently, you can install it globally:
 
