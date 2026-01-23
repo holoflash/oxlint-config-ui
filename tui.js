@@ -198,7 +198,6 @@ function execute(action) {
       );
 
       runLint({ typeAware: hasActiveTypeAwareRule });
-      runLint();
       return;
 
     case "RUN_SINGLE_RULE": {
