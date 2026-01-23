@@ -170,7 +170,9 @@ function runLint({ typeAware = false, rule = null } = {}) {
   });
 }
 
-function reducer(state, action) {
+function execute(action) {
+  if (!action) return;
+
   const {
     categories,
     rulesByCategory,
@@ -185,10 +187,33 @@ function reducer(state, action) {
   const catViewHeight = viewHeight - statsHeight;
 
   switch (action.type) {
-    case "SET_STATUS": {
-      if (activePane !== 1) return state;
+    case "EXIT":
+      exitAltScreen();
+      exit(0);
+      return;
+
+    case "RUN_LINT":
+      runLint();
+      return;
+
+    case "RUN_SINGLE_RULE": {
       const rule = currentRules[selectedRuleIdx];
-      if (!rule) return state;
+      if (rule) runLint({ rule });
+      return;
+    }
+
+    case "OPEN_DOCS": {
+      if (activePane === 1) {
+        const rule = currentRules[selectedRuleIdx];
+        if (rule) openUrl(rule.docs_url || rule.url);
+      }
+      return;
+    }
+
+    case "SET_STATUS": {
+      if (activePane !== 1) return;
+      const rule = currentRules[selectedRuleIdx];
+      if (!rule) return;
       updateConfig(rule, action.value);
       const updatedRules = [...currentRules];
       updatedRules[selectedRuleIdx] = {
@@ -196,7 +221,7 @@ function reducer(state, action) {
         configStatus: action.value,
         isActive: action.value === "error" || action.value === "warn",
       };
-      return {
+      state = {
         ...state,
         message: `Rule '${rule.value}' set to: ${action.value}`,
         messageType: "info",
@@ -205,19 +230,29 @@ function reducer(state, action) {
           [currentCat]: updatedRules,
         },
       };
+      render();
+      return;
     }
+
     case "MOVE_RIGHT":
-      if (activePane !== 1) return { ...state, activePane: activePane + 1 };
-      return state;
+      if (activePane !== 1) {
+        state = { ...state, activePane: activePane + 1 };
+        render();
+      }
+      return;
 
     case "MOVE_LEFT":
-      if (activePane !== 0) return { ...state, activePane: activePane - 1 };
-      return state;
+      if (activePane !== 0) {
+        state = { ...state, activePane: activePane - 1 };
+        render();
+      }
+      return;
+
     case "MOVE_UP":
       if (activePane === 0) {
         const nextIdx =
           selectedCatIdx === 0 ? categories.length - 1 : selectedCatIdx - 1;
-        return {
+        state = {
           ...state,
           selectedCatIdx: nextIdx,
           selectedRuleIdx: 0,
@@ -227,18 +262,20 @@ function reducer(state, action) {
       } else if (activePane === 1) {
         const nextIdx =
           selectedRuleIdx === 0 ? currentRules.length - 1 : selectedRuleIdx - 1;
-        return {
+        state = {
           ...state,
           selectedRuleIdx: nextIdx,
           scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
         };
       }
-      return state;
+      render();
+      return;
+
     case "MOVE_DOWN":
       if (activePane === 0) {
         const nextIdx =
           selectedCatIdx === categories.length - 1 ? 0 : selectedCatIdx + 1;
-        return {
+        state = {
           ...state,
           selectedCatIdx: nextIdx,
           selectedRuleIdx: 0,
@@ -248,15 +285,14 @@ function reducer(state, action) {
       } else if (activePane === 1) {
         const nextIdx =
           selectedRuleIdx === currentRules.length - 1 ? 0 : selectedRuleIdx + 1;
-        return {
+        state = {
           ...state,
           selectedRuleIdx: nextIdx,
           scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
         };
       }
-      return state;
-    default:
-      return state;
+      render();
+      return;
   }
 }
 
@@ -592,35 +628,7 @@ stdin.on("keypress", (_, key) => {
     (key.ctrl && key.name === "c"
       ? { type: "EXIT" }
       : KEY_MAP[key.sequence] || null);
-  if (!action) return;
-
-  if (action.type === "EXIT") {
-    exitAltScreen();
-    exit(0);
-  }
-  if (action.type === "RUN_LINT") {
-    runLint();
-    return;
-  }
-  if (action.type === "RUN_TYPE_AWARE_LINT") {
-    runLint({ typeAware: true });
-    return;
-  }
-  if (action.type === "RUN_SINGLE_RULE") {
-    const currentCat = state.categories[state.selectedCatIdx];
-    const rule = state.rulesByCategory[currentCat]?.[state.selectedRuleIdx];
-    if (rule) runLint({ rule });
-    return;
-  }
-  if (action.type === "OPEN_DOCS" && state.activePane === 1) {
-    const currentCat = state.categories[state.selectedCatIdx];
-    const rule = state.rulesByCategory[currentCat]?.[state.selectedRuleIdx];
-    if (rule) openUrl(rule.docs_url || rule.url);
-    return;
-  }
-
-  state = reducer(state, action);
-  render();
+  execute(action);
 });
 
 stdout.on("resize", render);
