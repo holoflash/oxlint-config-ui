@@ -88,7 +88,7 @@ function runLint({ typeAware = false, rule = null } = {}) {
   state.isLinting = true;
 
   let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
-  typeAware = typeAware || rule.type_aware;
+  typeAware = typeAware || rule?.type_aware;
 
   state.message = "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;
