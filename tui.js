@@ -82,7 +82,7 @@ function updateConfig(rule, newStatus) {
 }
 
 function runLint({ rule = null } = {}) {
-  if (state.isLinting) return;
+  if (state.isLintInProgress) return;
 
   state.isLintInProgress = true;
 
@@ -92,7 +92,7 @@ function runLint({ rule = null } = {}) {
     ? rule.type_aware
     : Object.values(state.rulesByCategory)
         .flat()
-        .some((rule) => rule.isActive && rule.type_aware === true);
+        .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
   state.message = "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;
@@ -583,9 +583,10 @@ function render() {
   const rules = state.rulesByCategory[currentCategory] || [];
   const rule = rules[state.selectedRuleIndex];
   const boxHeight = rows - 5;
-  const col1Width = Math.floor(columns * 0.2);
-  const col2Width = Math.floor(columns * 0.3);
-  const col3Width = columns - col1Width - col2Width - 2;
+  const categoriesColumnWidth = Math.floor(columns * 0.2);
+  const rulesColumnWidth = Math.floor(columns * 0.3);
+  const detailsColumnWidth =
+    columns - categoriesColumnWidth - rulesColumnWidth - 2;
   const statsHeight = 6;
   const categoryListHeight = boxHeight - statsHeight;
 
@@ -594,7 +595,7 @@ function render() {
     buffer,
     1,
     1,
-    col1Width,
+    categoriesColumnWidth,
     categoryListHeight,
     "CATEGORIES",
     state.categories,
@@ -602,12 +603,19 @@ function render() {
     state.categoryScroll,
     state.activePane === 0,
   );
-  drawStats(buffer, 1, 1 + categoryListHeight, col1Width, statsHeight, rules);
+  drawStats(
+    buffer,
+    1,
+    1 + categoryListHeight,
+    categoriesColumnWidth,
+    statsHeight,
+    rules,
+  );
   drawBox(
     buffer,
-    col1Width + 1,
+    categoriesColumnWidth + 1,
     1,
-    col2Width,
+    rulesColumnWidth,
     boxHeight,
     `RULES (${rules.length})`,
     rules,
@@ -617,9 +625,9 @@ function render() {
   );
   drawDetails(
     buffer,
-    col1Width + col2Width + 1,
+    categoriesColumnWidth + rulesColumnWidth + 1,
     1,
-    col3Width,
+    detailsColumnWidth,
     boxHeight,
     rule,
     state.activePane === 2,
