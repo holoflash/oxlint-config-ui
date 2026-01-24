@@ -81,13 +81,18 @@ function updateConfig(rule, newStatus) {
   }
 }
 
-function runLint({ typeAware = false, rule = null } = {}) {
+function runLint({ rule = null } = {}) {
   if (state.isLinting) return;
 
   state.isLinting = true;
 
   let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
-  typeAware = typeAware || rule?.type_aware;
+
+  const typeAware = rule
+    ? rule.type_aware
+    : Object.values(state.rulesByCategory)
+        .flat()
+        .some((rule) => rule.isActive && rule.type_aware === true);
 
   state.message = "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;
@@ -192,12 +197,7 @@ function execute(action) {
       return;
 
     case "RUN_LINT":
-      const allRules = Object.values(state.rulesByCategory).flat();
-      const hasActiveTypeAwareRule = allRules.some(
-        (rule) => rule.isActive && rule.type_aware === true
-      );
-
-      runLint({ typeAware: hasActiveTypeAwareRule });
+      runLint();
       return;
 
     case "RUN_SINGLE_RULE": {
@@ -357,7 +357,7 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) { }
+    } catch (e) {}
   }
 
   const map = {};
