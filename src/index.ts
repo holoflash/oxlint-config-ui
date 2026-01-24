@@ -4,7 +4,7 @@ import fs from "node:fs";
 import readline from "readline";
 import { execSync, exec, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
-import { type Action, type State, type OxlintRule, type OxlintConfig, type RuleStatus, COLORS } from "./model";
+import { type Action, type State, type OxlintRule, type OxlintConfig, type RuleStatus, COLORS } from "./model.js";
 
 const OXLINT_VERSION = "1.41.0";
 const TSGOLINT_VERSION = "0.11.1";
