@@ -19,9 +19,6 @@
     "tui",
     "cli"
   ],
-  "dependencies": {
-    "oxlint-tsgolint": "0.11.1"
-  },
   "author": "holoflash",
   "license": "MIT",
   "engines": {
