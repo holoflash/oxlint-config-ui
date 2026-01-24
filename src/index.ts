@@ -1,27 +1,15 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
+import readline from "readline";
 import { execSync, exec, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
-import readline from "readline";
-import fs from "node:fs";
+import { type Action, type State, type OxlintRule, type OxlintConfig, type RuleStatus, COLORS } from "./model";
 
 const OXLINT_VERSION = "1.41.0";
 const TSGOLINT_VERSION = "0.11.1";
 
-const COLORS = {
-  reset: "\x1b[0m",
-  dim: "\x1b[90m",
-  highlight: "\x1b[38;5;110m",
-  selectedBg: "\x1b[47m\x1b[30m",
-  borderActive: "\x1b[36m",
-  borderInactive: "\x1b[90m",
-  error: "\x1b[31m",
-  warn: "\x1b[33m",
-  success: "\x1b[32m",
-  info: "\x1b[34m",
-};
-
-const KEY_MAP = {
+const KEY_MAP: Record<string, Action> = {
   k: { type: "MOVE_UP" },
   up: { type: "MOVE_UP" },
   down: { type: "MOVE_DOWN" },
@@ -32,15 +20,15 @@ const KEY_MAP = {
   l: { type: "MOVE_RIGHT" },
   return: { type: "OPEN_DOCS" },
   enter: { type: "OPEN_DOCS" },
-  1: { type: "SET_STATUS", value: "off" },
-  2: { type: "SET_STATUS", value: "warn" },
-  3: { type: "SET_STATUS", value: "error" },
+  "1": { type: "SET_STATUS", value: "off" },
+  "2": { type: "SET_STATUS", value: "warn" },
+  "3": { type: "SET_STATUS", value: "error" },
   q: { type: "EXIT" },
   r: { type: "RUN_LINT" },
   x: { type: "RUN_SINGLE_RULE" },
 };
 
-let state = {
+let state: State = {
   activePane: 0,
   selectedCategoryIndex: 0,
   selectedRuleIndex: 0,
@@ -52,9 +40,8 @@ let state = {
   ...loadRules(),
 };
 
-// TODO: Nukes comments in the json file. Find the most minimal way to avoid this, while preserving formatting
-function updateConfig(rule, newStatus) {
-  if (!state.configPath) return;
+function updateConfig(rule: OxlintRule, newStatus: RuleStatus): void {
+  if (!state.configPath || !state.config) return;
   try {
     if (!state.config.rules) state.config.rules = {};
     const ruleName = rule.value;
@@ -62,26 +49,29 @@ function updateConfig(rule, newStatus) {
       rule.scope === "oxc2" || rule.scope === "eslint"
         ? ruleName
         : `${rule.scope}/${ruleName}`;
-    const existingKey = Object.keys(state.config.rules).find(
+
+    const rules = state.config.rules;
+    const existingKey = Object.keys(rules).find(
       (key) =>
         key === canonicalKey ||
         key === ruleName ||
         key.endsWith(`/${ruleName}`),
     );
     const targetKey = existingKey || canonicalKey;
-    state.config.rules[targetKey] = newStatus;
+    rules[targetKey] = newStatus;
+
     fs.writeFileSync(
       state.configPath,
       JSON.stringify(state.config, null, 2),
       "utf8",
     );
-  } catch (e) {
+  } catch {
     state.message = "Failed to write config file";
     state.messageType = "error";
   }
 }
 
-function runLint({ rule = null } = {}) {
+function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
   if (state.isLintInProgress) return;
 
   state.isLintInProgress = true;
@@ -91,8 +81,8 @@ function runLint({ rule = null } = {}) {
   const typeAware = rule
     ? rule.type_aware
     : Object.values(state.rulesByCategory)
-        .flat()
-        .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
+      .flat()
+      .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
   state.message = "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;
@@ -104,7 +94,6 @@ function runLint({ rule = null } = {}) {
   render();
 
   const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
-
   const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
 
   if (typeAware) {
@@ -145,7 +134,7 @@ function runLint({ rule = null } = {}) {
       const errors = parseInt(summaryMatch[2]);
       state.message = ruleName
         ? `[${ruleName}] Found ${errors} issue${errors === 1 ? "" : "s"}`
-        : (state.message = summaryMatch[0]);
+        : summaryMatch[0];
       state.messageType = errors > 0 ? "error" : "warn";
     } else if (
       stdoutData.toLowerCase().includes("finished") ||
@@ -174,7 +163,7 @@ function runLint({ rule = null } = {}) {
   });
 }
 
-function execute(action) {
+function execute(action: Action | null): void {
   if (!action) return;
 
   const {
@@ -215,7 +204,7 @@ function execute(action) {
     }
 
     case "SET_STATUS": {
-      if (activePane !== 1) return;
+      if (activePane !== 1 || !action.value) return;
       const rule = currentCategoryRules[selectedRuleIndex];
       if (!rule) return;
       updateConfig(rule, action.value);
@@ -316,7 +305,7 @@ function execute(action) {
   }
 }
 
-function getRuleStatus(ruleName, category, config) {
+function getRuleStatus(ruleName: string, category: string, config: OxlintConfig): RuleStatus {
   if (config.rules) {
     let val = config.rules[ruleName];
     if (val === undefined) {
@@ -325,25 +314,31 @@ function getRuleStatus(ruleName, category, config) {
       );
       if (foundKey) val = config.rules[foundKey];
     }
-    if (val !== undefined) return Array.isArray(val) ? val[0] : val;
+    if (val !== undefined) {
+      const status = Array.isArray(val) ? val[0] : val;
+      return status;
+    }
   }
-  return (config.categories && config.categories[category]) || "off";
+  if (config.categories && config.categories[category]) {
+    return config.categories[category];
+  }
+  return "off";
 }
 
-function stripJsonComments(json) {
+function stripJsonComments(json: string): string {
   return json.replace(
     /\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g,
     (m, g) => (g ? "" : m),
   );
 }
 
-function loadRules() {
-  let rulesData;
-  let config = {
+function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | "configPath"> {
+  let rulesData: any[] = [];
+  let config: OxlintConfig = {
     rules: {},
     categories: {},
   };
-  let configPath = null;
+  let configPath: string | null = null;
 
   try {
     const raw = execSync(
@@ -354,7 +349,7 @@ function loadRules() {
       },
     );
     rulesData = JSON.parse(raw);
-  } catch (e) {
+  } catch {
     console.error(
       `${COLORS.error}Error: Could not run 'npx oxlint'.${COLORS.reset}`,
     );
@@ -373,11 +368,15 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) {}
+    } catch {
+      console.error(
+        `${COLORS.error}Error: Couldn't parse config.${COLORS.reset}`,
+      );
+    }
   }
 
-  const map = {};
-  rulesData.forEach((rule) => {
+  const map: Record<string, OxlintRule[]> = {};
+  rulesData.forEach((rule: any) => {
     const cat = rule.category || "Uncategorized";
     if (!map[cat]) map[cat] = [];
     const status = getRuleStatus(rule.value, cat, config);
@@ -388,7 +387,7 @@ function loadRules() {
     });
   });
 
-  const categories = Object.keys(map).sort();
+  const categories = Object.keys(map).toSorted();
   return {
     categories,
     rulesByCategory: map,
@@ -397,13 +396,13 @@ function loadRules() {
   };
 }
 
-function updateScroll(idx, currentScroll, viewHeight) {
+function updateScroll(idx: number, currentScroll: number, viewHeight: number): number {
   if (idx < currentScroll) return idx;
   if (idx >= currentScroll + viewHeight) return idx - viewHeight + 1;
   return currentScroll;
 }
 
-function openUrl(url) {
+function openUrl(url: string | undefined): void {
   if (!url) return;
   const openCmd =
     platform === "darwin"
@@ -414,7 +413,7 @@ function openUrl(url) {
   exec(`${openCmd} "${url}"`);
 }
 
-function chunkString(str, len) {
+function chunkString(str: string, len: number): string[] {
   if (!str) return [];
   const size = Math.ceil(str.length / len);
   const r = Array(size);
@@ -422,22 +421,22 @@ function chunkString(str, len) {
   return r;
 }
 
-const write = (str) => stdout.write(str);
+const write = (str: string) => stdout.write(str);
 const enterAltScreen = () => write("\x1b[?1049h\x1b[?25l");
 const exitAltScreen = () => write("\x1b[?1049l\x1b[?25h");
 
 function drawBox(
-  buffer,
-  x,
-  y,
-  width,
-  height,
-  title,
-  items,
-  selectedIndex,
-  scrollOffset,
-  isActive,
-) {
+  buffer: string[],
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  title: string,
+  items: (OxlintRule | string)[],
+  selectedIndex: number,
+  scrollOffset: number,
+  isActive: boolean,
+): void {
   const borderColor = isActive ? COLORS.borderActive : COLORS.borderInactive;
   const titleClean =
     title.length > width - 6 ? title.substring(0, width - 7) + "…" : title;
@@ -459,15 +458,21 @@ function drawBox(
   const innerHeight = height - 2;
   items.slice(scrollOffset, scrollOffset + innerHeight).forEach((item, i) => {
     const absoluteIndex = scrollOffset + i;
-    const rawText = (item.value || item).toString();
+    const isRule = typeof item !== "string";
+    const rawText = isRule ? (item).value : (item);
+
     let display =
       rawText.length > width - 4
         ? rawText.substring(0, width - 5) + "…"
         : rawText.padEnd(width - 4);
-    let itemColor = COLORS.dim;
-    if (item.configStatus === "error") itemColor = COLORS.error;
-    else if (item.configStatus === "warn") itemColor = COLORS.warn;
-    else if (item.isActive) itemColor = COLORS.success;
+
+    let itemColor: string = COLORS.dim;
+    if (isRule) {
+      const ruleItem = item;
+      if (ruleItem.configStatus === "error") itemColor = COLORS.error;
+      else if (ruleItem.configStatus === "warn") itemColor = COLORS.warn;
+      else if (ruleItem.isActive) itemColor = COLORS.success;
+    }
 
     buffer.push(`\x1b[${y + 1 + i};${x + 2}H`);
     if (absoluteIndex === selectedIndex) {
@@ -482,7 +487,7 @@ function drawBox(
   });
 }
 
-function drawStats(buffer, x, y, width, height, rules) {
+function drawStats(buffer: string[], x: number, y: number, width: number, height: number, rules: OxlintRule[]): void {
   const borderColor = COLORS.borderInactive;
   const topBorder = `${borderColor}┌─ STATS `.padEnd(
     width + borderColor.length - 1,
@@ -521,7 +526,7 @@ function drawStats(buffer, x, y, width, height, rules) {
   });
 }
 
-function drawDetails(buffer, x, y, width, height, rule, isActive) {
+function drawDetails(buffer: string[], x: number, y: number, width: number, height: number, rule: OxlintRule | undefined, isActive: boolean): void {
   const borderColor = isActive ? COLORS.borderActive : COLORS.borderInactive;
   const topBorder = `${borderColor}┌─ DETAILS `.padEnd(
     width + borderColor.length - 1,
@@ -545,12 +550,12 @@ function drawDetails(buffer, x, y, width, height, rule, isActive) {
     statusDisplay = `${COLORS.warn}${statusDisplay}${COLORS.reset}`;
   else statusDisplay = `${COLORS.dim}${statusDisplay}${COLORS.reset}`;
 
-  const labels = [
+  const labels: [string, string][] = [
     ["Name", rule.value],
     ["Status", statusDisplay],
     ["Category", rule.category],
     ["Scope", rule.scope],
-    ["Fix", rule.fix],
+    ["Fix", rule.fix || "N/A"],
     ["Default", rule.default ? "Yes" : "No"],
     ["Type-aware", rule.type_aware ? "Yes" : "No"],
     ["Docs", `Hit ${COLORS.highlight}ENTER${COLORS.reset} to open docs`],
@@ -577,8 +582,8 @@ function drawDetails(buffer, x, y, width, height, rule, isActive) {
   });
 }
 
-function render() {
-  const { columns, rows } = stdout;
+function render(): void {
+  const { columns = 80, rows = 24 } = stdout;
   const currentCategory = state.categories[state.selectedCategoryIndex];
   const rules = state.rulesByCategory[currentCategory] || [];
   const rule = rules[state.selectedRuleIndex];

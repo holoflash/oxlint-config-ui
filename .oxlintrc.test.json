@@ -9,8 +9,9 @@
     "promise",
     "node"
   ],
-  // Comments are allowed in oxlint config!
-  "categories": { "perf": "warn" },
+  "categories": {
+    "perf": "warn"
+  },
   "rules": {
     "for-direction": "warn",
     "no-async-promise-executor": "warn",
@@ -120,6 +121,9 @@
     "unicorn/no-useless-spread": "warn",
     "unicorn/prefer-set-size": "warn",
     "unicorn/prefer-string-starts-ends-with": "warn",
-    "ws-imports/no-direct-ws-imports": "warn"
+    "ws-imports/no-direct-ws-imports": "warn",
+    "react_perf/jsx-no-jsx-as-prop": "off",
+    "react_perf/jsx-no-new-array-as-prop": "off",
+    "react_perf/jsx-no-new-function-as-prop": "off"
   }
 }
