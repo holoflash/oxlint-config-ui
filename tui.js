@@ -42,11 +42,11 @@ const KEY_MAP = {
 
 let state = {
   activePane: 0,
-  selectedCatIdx: 0,
-  selectedRuleIdx: 0,
-  scrollCat: 0,
-  scrollRule: 0,
-  isLinting: false,
+  selectedCategoryIndex: 0,
+  selectedRuleIndex: 0,
+  categoryScroll: 0,
+  ruleScroll: 0,
+  isLintInProgress: false,
   message: "oxlint-tui",
   messageType: "dim",
   ...loadRules(),
@@ -82,9 +82,9 @@ function updateConfig(rule, newStatus) {
 }
 
 function runLint({ typeAware = false, rule = null } = {}) {
-  if (state.isLinting) return;
+  if (state.isLintInProgress) return;
 
-  state.isLinting = true;
+  state.isLintInProgress = true;
 
   let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
   typeAware = typeAware || rule?.type_aware;
@@ -129,7 +129,7 @@ function runLint({ typeAware = false, rule = null } = {}) {
   });
 
   child.on("close", (code) => {
-    state.isLinting = false;
+    state.isLintInProgress = false;
 
     const fullOutput = stdoutData + stderrData;
     const summaryMatch = fullOutput.match(
@@ -175,15 +175,15 @@ function execute(action) {
   const {
     categories,
     rulesByCategory,
-    selectedCatIdx,
-    selectedRuleIdx,
+    selectedCategoryIndex,
+    selectedRuleIndex,
     activePane,
   } = state;
-  const currentCat = categories[selectedCatIdx];
-  const currentRules = rulesByCategory[currentCat] || [];
-  const viewHeight = stdout.rows - 8;
-  const statsHeight = 7;
-  const catViewHeight = viewHeight - statsHeight;
+  const currentCategory = categories[selectedCategoryIndex];
+  const currentCategoryRules = rulesByCategory[currentCategory] || [];
+  const viewportHeight = stdout.rows - 8;
+  const statsBoxHeight = 7;
+  const categoryListHeight = viewportHeight - statsBoxHeight;
 
   switch (action.type) {
     case "EXIT":
@@ -192,23 +192,23 @@ function execute(action) {
       return;
 
     case "RUN_LINT":
-      const allRules = Object.values(state.rulesByCategory).flat();
-      const hasActiveTypeAwareRule = allRules.some(
-        (rule) => rule.isActive && rule.type_aware === true
+      const flattenedRules = Object.values(state.rulesByCategory).flat();
+      const hasActiveTypeAwareRule = flattenedRules.some(
+        (rule) => rule.isActive && rule.type_aware === true,
       );
 
       runLint({ typeAware: hasActiveTypeAwareRule });
       return;
 
     case "RUN_SINGLE_RULE": {
-      const rule = currentRules[selectedRuleIdx];
+      const rule = currentCategoryRules[selectedRuleIndex];
       if (rule) runLint({ rule });
       return;
     }
 
     case "OPEN_DOCS": {
       if (activePane === 1) {
-        const rule = currentRules[selectedRuleIdx];
+        const rule = currentCategoryRules[selectedRuleIndex];
         if (rule) openUrl(rule.docs_url || rule.url);
       }
       return;
@@ -216,11 +216,11 @@ function execute(action) {
 
     case "SET_STATUS": {
       if (activePane !== 1) return;
-      const rule = currentRules[selectedRuleIdx];
+      const rule = currentCategoryRules[selectedRuleIndex];
       if (!rule) return;
       updateConfig(rule, action.value);
-      const updatedRules = [...currentRules];
-      updatedRules[selectedRuleIdx] = {
+      const updatedRules = [...currentCategoryRules];
+      updatedRules[selectedRuleIndex] = {
         ...rule,
         configStatus: action.value,
         isActive: action.value === "error" || action.value === "warn",
@@ -231,7 +231,7 @@ function execute(action) {
         messageType: "info",
         rulesByCategory: {
           ...rulesByCategory,
-          [currentCat]: updatedRules,
+          [currentCategory]: updatedRules,
         },
       };
       render();
@@ -254,22 +254,30 @@ function execute(action) {
 
     case "MOVE_UP":
       if (activePane === 0) {
-        const nextIdx =
-          selectedCatIdx === 0 ? categories.length - 1 : selectedCatIdx - 1;
+        const nextIndex =
+          selectedCategoryIndex === 0
+            ? categories.length - 1
+            : selectedCategoryIndex - 1;
         state = {
           ...state,
-          selectedCatIdx: nextIdx,
-          selectedRuleIdx: 0,
-          scrollRule: 0,
-          scrollCat: updateScroll(nextIdx, state.scrollCat, catViewHeight),
+          selectedCategoryIndex: nextIndex,
+          selectedRuleIndex: 0,
+          ruleScroll: 0,
+          categoryScroll: updateScroll(
+            nextIndex,
+            state.categoryScroll,
+            categoryListHeight,
+          ),
         };
       } else if (activePane === 1) {
-        const nextIdx =
-          selectedRuleIdx === 0 ? currentRules.length - 1 : selectedRuleIdx - 1;
+        const nextIndex =
+          selectedRuleIndex === 0
+            ? currentCategoryRules.length - 1
+            : selectedRuleIndex - 1;
         state = {
           ...state,
-          selectedRuleIdx: nextIdx,
-          scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
+          selectedRuleIndex: nextIndex,
+          ruleScroll: updateScroll(nextIndex, state.ruleScroll, viewportHeight),
         };
       }
       render();
@@ -277,22 +285,30 @@ function execute(action) {
 
     case "MOVE_DOWN":
       if (activePane === 0) {
-        const nextIdx =
-          selectedCatIdx === categories.length - 1 ? 0 : selectedCatIdx + 1;
+        const nextIndex =
+          selectedCategoryIndex === categories.length - 1
+            ? 0
+            : selectedCategoryIndex + 1;
         state = {
           ...state,
-          selectedCatIdx: nextIdx,
-          selectedRuleIdx: 0,
-          scrollRule: 0,
-          scrollCat: updateScroll(nextIdx, state.scrollCat, catViewHeight),
+          selectedCategoryIndex: nextIndex,
+          selectedRuleIndex: 0,
+          ruleScroll: 0,
+          categoryScroll: updateScroll(
+            nextIndex,
+            state.categoryScroll,
+            categoryListHeight,
+          ),
         };
       } else if (activePane === 1) {
-        const nextIdx =
-          selectedRuleIdx === currentRules.length - 1 ? 0 : selectedRuleIdx + 1;
+        const nextIndex =
+          selectedRuleIndex === currentCategoryRules.length - 1
+            ? 0
+            : selectedRuleIndex + 1;
         state = {
           ...state,
-          selectedRuleIdx: nextIdx,
-          scrollRule: updateScroll(nextIdx, state.scrollRule, viewHeight),
+          selectedRuleIndex: nextIndex,
+          ruleScroll: updateScroll(nextIndex, state.ruleScroll, viewportHeight),
         };
       }
       render();
@@ -357,7 +373,7 @@ function loadRules() {
       config = JSON.parse(
         stripJsonComments(fs.readFileSync(configPath, "utf8")),
       );
-    } catch (e) { }
+    } catch (e) {}
   }
 
   const map = {};
@@ -389,13 +405,13 @@ function updateScroll(idx, currentScroll, viewHeight) {
 
 function openUrl(url) {
   if (!url) return;
-  const cmd =
+  const openCmd =
     platform === "darwin"
       ? "open"
       : platform === "win32"
         ? "start"
         : "xdg-open";
-  exec(`${cmd} "${url}"`);
+  exec(`${openCmd} "${url}"`);
 }
 
 function chunkString(str, len) {
@@ -418,7 +434,7 @@ function drawBox(
   height,
   title,
   items,
-  selectedIdx,
+  selectedIndex,
   scrollOffset,
   isActive,
 ) {
@@ -442,7 +458,7 @@ function drawBox(
 
   const innerHeight = height - 2;
   items.slice(scrollOffset, scrollOffset + innerHeight).forEach((item, i) => {
-    const absIdx = scrollOffset + i;
+    const absoluteIndex = scrollOffset + i;
     const rawText = (item.value || item).toString();
     let display =
       rawText.length > width - 4
@@ -454,7 +470,7 @@ function drawBox(
     else if (item.isActive) itemColor = COLORS.success;
 
     buffer.push(`\x1b[${y + 1 + i};${x + 2}H`);
-    if (absIdx === selectedIdx) {
+    if (absoluteIndex === selectedIndex) {
       buffer.push(
         isActive
           ? `${COLORS.selectedBg}${display}${COLORS.reset}`
@@ -482,9 +498,9 @@ function drawStats(buffer, x, y, width, height, rules) {
   );
 
   let counts = { error: 0, warn: 0, off: 0 };
-  rules.forEach((r) => {
-    if (r.configStatus === "error") counts.error++;
-    else if (r.configStatus === "warn") counts.warn++;
+  rules.forEach((ruleItem) => {
+    if (ruleItem.configStatus === "error") counts.error++;
+    else if (ruleItem.configStatus === "warn") counts.warn++;
     else counts.off++;
   });
 
@@ -563,47 +579,47 @@ function drawDetails(buffer, x, y, width, height, rule, isActive) {
 
 function render() {
   const { columns, rows } = stdout;
-  const currentCat = state.categories[state.selectedCatIdx];
-  const rules = state.rulesByCategory[currentCat] || [];
-  const rule = rules[state.selectedRuleIdx];
+  const currentCategory = state.categories[state.selectedCategoryIndex];
+  const rules = state.rulesByCategory[currentCategory] || [];
+  const rule = rules[state.selectedRuleIndex];
   const boxHeight = rows - 5;
-  const col1W = Math.floor(columns * 0.2);
-  const col2W = Math.floor(columns * 0.3);
-  const col3W = columns - col1W - col2W - 2;
+  const col1Width = Math.floor(columns * 0.2);
+  const col2Width = Math.floor(columns * 0.3);
+  const col3Width = columns - col1Width - col2Width - 2;
   const statsHeight = 6;
-  const catListHeight = boxHeight - statsHeight;
+  const categoryListHeight = boxHeight - statsHeight;
 
   const buffer = ["\x1b[H\x1b[J"];
   drawBox(
     buffer,
     1,
     1,
-    col1W,
-    catListHeight,
+    col1Width,
+    categoryListHeight,
     "CATEGORIES",
     state.categories,
-    state.selectedCatIdx,
-    state.scrollCat,
+    state.selectedCategoryIndex,
+    state.categoryScroll,
     state.activePane === 0,
   );
-  drawStats(buffer, 1, 1 + catListHeight, col1W, statsHeight, rules);
+  drawStats(buffer, 1, 1 + categoryListHeight, col1Width, statsHeight, rules);
   drawBox(
     buffer,
-    col1W + 1,
+    col1Width + 1,
     1,
-    col2W,
+    col2Width,
     boxHeight,
     `RULES (${rules.length})`,
     rules,
-    state.selectedRuleIdx,
-    state.scrollRule,
+    state.selectedRuleIndex,
+    state.ruleScroll,
     state.activePane === 1,
   );
   drawDetails(
     buffer,
-    col1W + col2W + 1,
+    col1Width + col2Width + 1,
     1,
-    col3W,
+    col3Width,
     boxHeight,
     rule,
     state.activePane === 2,
