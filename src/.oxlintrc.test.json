@@ -1,5 +1,14 @@
 {
-  "plugins": ["react", "unicorn", "typescript", "oxc", "import", "jsx-a11y", "promise", "node"],
+  "plugins": [
+    "react",
+    "unicorn",
+    "typescript",
+    "oxc",
+    "import",
+    "jsx-a11y",
+    "promise",
+    "node"
+  ],
   "categories": {
     "perf": "warn"
   },
@@ -115,6 +124,10 @@
     "ws-imports/no-direct-ws-imports": "warn",
     "react_perf/jsx-no-jsx-as-prop": "off",
     "react_perf/jsx-no-new-array-as-prop": "off",
-    "react_perf/jsx-no-new-function-as-prop": "off"
+    "react_perf/jsx-no-new-function-as-prop": "off",
+    "vue/no-this-in-before-route-enter": "error",
+    "vue/no-lifecycle-after-await": "error",
+    "vue/no-export-in-script-setup": "error",
+    "vue/no-deprecated-destroyed-lifecycle": "error"
   }
 }
