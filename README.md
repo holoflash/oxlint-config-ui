@@ -50,11 +50,11 @@ oxlint-tui
 ## Keyboard Controls
 
 | Key             | Action                                  |
-| :-------------- | :-------------------------------------- | --- |
+| :-------------- | :-------------------------------------- |
 | **↑** / **k**   | Move selection Up                       |
 | **↓** / **j**   | Move selection Down                     |
 | **←** / **h**   | Move focus Left (Categories <-> Rules)  |
-| **→** / **l**   | Move focus Right (Categories <-> Rules) |     |
+| **→** / **l**   | Move focus Right (Categories <-> Rules) |
 | **1**           | Set selected rule to "off"              |
 | **2**           | Set selected rule to "warn"             |
 | **3**           | Set selected rule to "error"            |
