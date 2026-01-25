@@ -13,8 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm install
-      - run: npm run format
-      - run: npm run type-check
-      - run: npm run lint
-      - run: npm run build
+      - name: Check formatting
+        run: npm run format-check
+      - name: Type check
+        run: npm run type-check
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build

@@ -79,8 +79,8 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
   const typeAware = rule
     ? rule.type_aware
     : Object.values(state.rulesByCategory)
-      .flat()
-      .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
+        .flat()
+        .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
   state.message = "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;

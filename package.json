@@ -20,17 +20,20 @@
   ],
   "type": "module",
   "scripts": {
+    "prepare": "husky install",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts .oxlintrc.test.json",
     "build": "rm -rf dist && tsc",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
+    "format-check": "oxfmt --check",
     "build-run": "npm run build && node dist/index.js .oxlintrc.test.json"
   },
   "devDependencies": {
     "@types/node": "25.0.10",
     "@typescript/native-preview": "7.0.0-dev.20260124.1",
+    "husky": "^9.1.7",
     "oxfmt": "0.26.0",
     "oxlint": "1.41.0",
     "oxlint-tsgolint": "0.11.1",
