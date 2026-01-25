@@ -14,13 +14,18 @@ Thank you for your interest in contributing!
 3. **Create a new branch**
    - `git checkout -b your-feature-or-fix`
 
-4. **Commit and push your changes**
+4. **Setup and workflow**
+   - Run `npm install` to install dependencies.
+   - Use `npm run lint` regularly to follow our best practices.
+   - Don't worry if you miss something—linting and type-checking will run automatically when you push.
+
+5. **Commit and push your changes**
    - `git add .`
    - Follow [conventional commit rules](https://www.conventionalcommits.org/en/v1.0.0/) for naming commits where applicable
    - `git commit -m "feat: Describe your change"`
    - `git push origin your-feature-or-fix`
 
-5. **Open a Pull Request**
+6. **Open a Pull Request**
    - Go to your fork on GitHub and click "Compare & pull request".
    - Describe what you have done and submit PR for review.
 
