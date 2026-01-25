@@ -1,4 +1,5 @@
-import type { OxlintRule, State } from "./types.js";
+import { state } from "./index.js";
+import type { OxlintRule } from "./types.js";
 import { stdout } from "node:process";
 
 export const COLORS = {
@@ -176,7 +177,7 @@ function drawDetails(
   });
 }
 
-export function render(state: State): void {
+export function render(): void {
   const { columns = 80, rows = 24 } = stdout;
   const currentCategory = state.categories[state.selectedCategoryIndex];
   const rules = state.rulesByCategory[currentCategory] || [];

@@ -29,7 +29,7 @@ const KEY_MAP: Record<string, Action> = {
   x: { type: "RUN_SINGLE_RULE" },
 };
 
-let state: State = {
+export let state: State = {
   activePane: 0,
   selectedCategoryIndex: 0,
   selectedRuleIndex: 0,
@@ -83,7 +83,7 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
 
   state.messageType = "info";
 
-  render(state);
+  render();
 
   const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
   const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
@@ -144,7 +144,7 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
       state.message = cleanError ? `Error: ${cleanError.substring(0, 50)}...` : "Lint failed";
       state.messageType = "error";
     }
-    render(state);
+    render();
   });
 }
 
@@ -203,21 +203,21 @@ function execute(action: Action | null): void {
           [currentCategory]: updatedRules,
         },
       };
-      render(state);
+      render();
       return;
     }
 
     case "MOVE_RIGHT":
       if (activePane !== 1) {
         state = { ...state, activePane: activePane + 1 };
-        render(state);
+        render();
       }
       return;
 
     case "MOVE_LEFT":
       if (activePane !== 0) {
         state = { ...state, activePane: activePane - 1 };
-        render(state);
+        render();
       }
       return;
 
@@ -241,7 +241,7 @@ function execute(action: Action | null): void {
           ruleScroll: updateScroll(nextIndex, state.ruleScroll, viewportHeight),
         };
       }
-      render(state);
+      render();
       return;
 
     case "MOVE_DOWN":
@@ -264,7 +264,7 @@ function execute(action: Action | null): void {
           ruleScroll: updateScroll(nextIndex, state.ruleScroll, viewportHeight),
         };
       }
-      render(state);
+      render();
       return;
   }
 }
@@ -382,4 +382,4 @@ stdin.on("keypress", (_, key) => {
 
 stdout.on("resize", render);
 enterAltScreen();
-render(state);
+render();
