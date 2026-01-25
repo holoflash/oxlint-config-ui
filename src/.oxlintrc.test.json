@@ -1,14 +1,5 @@
 {
-  "plugins": [
-    "react",
-    "unicorn",
-    "typescript",
-    "oxc",
-    "import",
-    "jsx-a11y",
-    "promise",
-    "node"
-  ],
+  "plugins": ["react", "unicorn", "typescript", "oxc", "import", "jsx-a11y", "promise", "node"],
   "categories": {
     "perf": "warn"
   },
