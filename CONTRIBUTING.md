@@ -25,4 +25,5 @@ Thank you for your interest in contributing!
    - Describe what you have done and submit PR for review.
 
 ## Questions or Suggestions?
-   - Feel free to suggest new features or improvements by [creating an issue](https://github.com/holoflash/oxlint-tui/issues).
+
+- Feel free to suggest new features or improvements by [creating an issue](https://github.com/holoflash/oxlint-tui/issues).

@@ -2,37 +2,41 @@
   "name": "oxlint-tui",
   "version": "1.0.19",
   "description": "A Node TUI Oxlint rules and configuration browser",
-  "type": "module",
+  "keywords": [
+    "cli",
+    "configuration",
+    "lint",
+    "linter",
+    "oxlint",
+    "tui"
+  ],
+  "license": "MIT",
+  "author": "holoflash",
   "bin": {
     "oxlint-tui": "dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts .oxlintrc.test.json",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
+    "format": "oxfmt",
     "build-run": "npm run build && node dist/index.js .oxlintrc.test.json"
   },
-  "keywords": [
-    "oxlint",
-    "configuration",
-    "linter",
-    "lint",
-    "tui",
-    "cli"
-  ],
   "devDependencies": {
     "@types/node": "25.0.10",
-    "@typescript/native-preview": "7.0.0-dev.20260122.2",
+    "@typescript/native-preview": "7.0.0-dev.20260124.1",
+    "oxfmt": "0.26.0",
     "oxlint": "1.41.0",
     "oxlint-tsgolint": "0.11.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
-  "author": "holoflash",
-  "license": "MIT",
   "engines": {
     "node": ">=16"
   }
