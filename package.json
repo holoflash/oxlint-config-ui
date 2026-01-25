@@ -2,25 +2,43 @@
   "name": "oxlint-tui",
   "version": "1.0.19",
   "description": "A Node TUI Oxlint rules and configuration browser",
-  "type": "module",
+  "keywords": [
+    "cli",
+    "configuration",
+    "lint",
+    "linter",
+    "oxlint",
+    "tui"
+  ],
+  "license": "MIT",
+  "author": "holoflash",
   "bin": {
-    "oxlint-rules-tui": "./tui.js"
+    "oxlint-tui": "dist/index.js"
   },
   "files": [
-    "tui.js"
+    "dist"
   ],
+  "type": "module",
   "scripts": {
-    "start": "node tui.js",
-    "dev": "node tui.js .oxlintrc.example.json"
+    "prepare": "husky",
+    "dev": "tsx src/index.ts src/.oxlintrc.test.json",
+    "lint": "oxlint --type-aware --format=stylish",
+    "type-check": "tsgo --noEmit",
+    "format": "oxfmt",
+    "format-check": "oxfmt --check",
+    "build": "rm -rf dist && tsc",
+    "build-run": "npm run build && node dist/index.js src/.oxlintrc.test.json"
   },
-  "keywords": [
-    "oxlint",
-    "lint",
-    "tui",
-    "cli"
-  ],
-  "author": "holoflash",
-  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "25.0.10",
+    "@typescript/native-preview": "7.0.0-dev.20260124.1",
+    "husky": "9.1.7",
+    "oxfmt": "0.26.0",
+    "oxlint": "1.41.0",
+    "oxlint-tsgolint": "0.11.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  },
   "engines": {
     "node": ">=16"
   }

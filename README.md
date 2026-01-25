@@ -14,10 +14,10 @@ Configuring linters often involves jumping between your editor, a massive JSON f
 
 ## Features
 
-* **Config Aware**: provides information about the rules used in your project by loading `.oxlintrc.json`.
-* **Details**: View category, scope, fix, default and type-aware rule parameters at a glance.
-* **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
-* **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
+- **Config Aware**: provides information about the rules used in your project by loading `.oxlintrc.json`.
+- **Details**: View category, scope, fix, default and type-aware rule parameters at a glance.
+- **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
+- **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
 
 ## Usage
 
@@ -49,28 +49,28 @@ oxlint-tui
 
 ## Keyboard Controls
 
-| Key | Action |
-| :--- | :--- |
-| **↑** / **k** | Move selection Up |
-| **↓** / **j** | Move selection Down |
-| **←** / **h** | Move focus Left (Categories <-> Rules) |
-| **→** / **l** | Move focus Right (Categories <-> Rules) ||
-| **1** |  Set selected rule to "off" |
-| **2** |  Set selected rule to "warn" |
-| **3** |  Set selected rule to "error" |
-| **x** |  Run "oxlint" with the selected rule |
-| **r** |  Run "oxlint with all enabled rules |
-| **Enter** | Open Rule Documentation in Browser |
-| **q** / **Esc** | Quit |
+| Key             | Action                                  |
+| :-------------- | :-------------------------------------- | --- |
+| **↑** / **k**   | Move selection Up                       |
+| **↓** / **j**   | Move selection Down                     |
+| **←** / **h**   | Move focus Left (Categories <-> Rules)  |
+| **→** / **l**   | Move focus Right (Categories <-> Rules) |     |
+| **1**           | Set selected rule to "off"              |
+| **2**           | Set selected rule to "warn"             |
+| **3**           | Set selected rule to "error"            |
+| **x**           | Run "oxlint" with the selected rule     |
+| **r**           | Run "oxlint with all enabled rules      |
+| **Enter**       | Open Rule Documentation in Browser      |
+| **q** / **Esc** | Quit                                    |
 
 ## Requirements
 
-* Node.js >= 16
-* `oxlint` (The tool runs `npx oxlint --rules --format=json` internally to fetch definitions)
+- Node.js >= 16
+- `oxlint` (The tool runs `npx oxlint --rules --format=json` internally to fetch definitions)
 
 ## Roadmap
 
-The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file -  but also allows to fully customize the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
+The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file - but also allows to fully customize the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
 
 If you're willing and able, please feel free to [contribute to this project](https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md).
 
