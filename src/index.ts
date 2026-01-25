@@ -2,15 +2,9 @@
 
 import fs from "node:fs";
 import readline from "readline";
-import { execSync, exec, spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
-import {
-  type Action,
-  type State,
-  type OxlintRule,
-  type OxlintConfig,
-  type RuleStatus,
-} from "./types.js";
+import type { Action, State, OxlintRule, OxlintConfig, RuleStatus } from "./types.js";
 import { render } from "./rendering.js";
 
 const OXLINT_VERSION = "1.41.0";
@@ -362,8 +356,14 @@ function updateScroll(idx: number, currentScroll: number, viewHeight: number): n
 
 function openUrl(url: string | undefined): void {
   if (!url) return;
-  const openCmd = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
-  exec(`${openCmd} "${url}"`);
+  const cmd = platform === "darwin" ? "open" : platform === "win32" ? "explorer" : "xdg-open";
+
+  const process = spawn(cmd, [url], {
+    detached: true,
+    stdio: "ignore",
+  });
+
+  process.unref();
 }
 
 const write = (str: string) => stdout.write(str);
