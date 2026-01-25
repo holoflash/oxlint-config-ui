@@ -1,11 +1,9 @@
-# Build and run TypeScript
-name: Build and Run
+name: Format-check, type-check, lint and build
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-# ...existing code...
 jobs:
   build:
     runs-on: ubuntu-latest
