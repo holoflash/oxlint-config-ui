@@ -178,6 +178,9 @@ function drawDetails(
 }
 
 export function render(): void {
+  if (!state || !state.categories) {
+    return;
+  }
   const { columns = 80, rows = 24 } = stdout;
   const currentCategory = state.categories[state.selectedCategoryIndex];
   const rules = state.rulesByCategory[currentCategory] || [];
