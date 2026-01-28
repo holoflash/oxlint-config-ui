@@ -4,15 +4,15 @@ import { stdout } from "node:process";
 
 export const COLORS = {
   reset: "\x1b[0m",
-  dim: "\x1b[90m",
-  highlight: "\x1b[38;5;110m",
-  selectedBg: "\x1b[47m\x1b[30m",
-  borderActive: "\x1b[36m",
-  borderInactive: "\x1b[90m",
-  error: "\x1b[31m",
-  warn: "\x1b[33m",
-  success: "\x1b[32m",
-  info: "\x1b[34m",
+  dim: "\x1b[38;5;242m",
+  highlight: "\x1b[38;5;111m",
+  selectedBg: "\x1b[48;5;24m\x1b[38;5;255m\x1b[1m",
+  borderActive: "\x1b[38;5;111m",
+  borderInactive: "\x1b[38;5;237m",
+  error: "\x1b[38;5;203m",
+  warn: "\x1b[38;5;215m",
+  success: "\x1b[38;5;114m",
+  info: "\x1b[38;5;75m",
 } as const;
 
 function chunkString(str: string, len: number): string[] {
@@ -145,7 +145,7 @@ function drawDetails(
     statusDisplay = `${COLORS.warn}${statusDisplay}${COLORS.reset}`;
   else statusDisplay = `${COLORS.dim}${statusDisplay}${COLORS.reset}`;
 
-  const labels: [string, string][] = [
+  const metadata: [string, string][] = [
     ["Name", rule.value],
     ["Status", statusDisplay],
     ["Category", rule.category],
@@ -153,28 +153,42 @@ function drawDetails(
     ["Fix", rule.fix || "N/A"],
     ["Default", rule.default ? "Yes" : "No"],
     ["Type-aware", rule.type_aware ? "Yes" : "No"],
-    ["Docs", `Hit ${COLORS.highlight}ENTER${COLORS.reset} to open docs`],
   ];
 
   let line = 0;
-  labels.forEach(([lbl, val]) => {
-    if (lbl === "Status" && line < height - 2) {
+
+  metadata.forEach(([lbl, val]) => {
+    if (line < height - 2) {
       buffer.push(
-        `\x1b[${y + 1 + line};${x + 2}H${COLORS.highlight}${lbl.padEnd(10)} ${COLORS.reset}${val}`,
+        `\x1b[${y + 1 + line};${x + 2}H${COLORS.highlight}${lbl.padEnd(12)} ${COLORS.reset}${val}`,
       );
       line++;
-      return;
     }
-    const chunks = chunkString(String(val || "N/A"), width - 15);
+  });
+
+  if (line < height - 3) line++;
+  if (line < height - 2) {
+    buffer.push(`\x1b[${y + 1 + line};${x + 2}H${COLORS.reset}Description:${COLORS.reset}`);
+    line++;
+
+    const cleanDesc = (rule.description ?? "N/A").replace(/\s+/g, " ").trim();
+    const chunks = chunkString(cleanDesc, width - 6);
+
     chunks.forEach((chunk) => {
       if (line < height - 2) {
-        buffer.push(
-          `\x1b[${y + 1 + line};${x + 2}H${COLORS.highlight}${lbl.padEnd(10)} ${COLORS.reset}${chunk}`,
-        );
+        buffer.push(`\x1b[${y + 1 + line};${x + 2}H${COLORS.dim}${chunk}${COLORS.reset}`);
         line++;
       }
     });
-  });
+  }
+
+  const footerLine = Math.max(line + 1, height - 3);
+
+  if (footerLine < height - 1) {
+    buffer.push(
+      `\x1b[${y + 1 + footerLine};${x + 2}HHit ${COLORS.highlight}ENTER${COLORS.reset} to open docs`,
+    );
+  }
 }
 
 export function render(): void {

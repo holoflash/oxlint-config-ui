@@ -13,6 +13,7 @@ export type OxlintRule = {
   url?: string;
   configStatus: RuleStatus;
   isActive: boolean;
+  description?: string;
 };
 
 export type OxlintConfig = {
