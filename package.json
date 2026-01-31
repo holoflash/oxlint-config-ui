@@ -22,14 +22,13 @@
   "scripts": {
     "prepare": "husky",
     "dev": "tsx src/index.ts src/.oxlintrc.test.json",
-    "generate-rule-descriptions": "tsx scripts/generate-rule-descriptions.ts",
+    "gen": "tsx scripts/generate-rule-descriptions.ts",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
-    "gen": "npm run generate-rule-descriptions",
-    "build": "npm run gen && tsdown",
-    "build-run": "npm run build && node dist/index.mjs src/.oxlintrc.test.json"
+    "build": "tsdown",
+    "build-run": "npm run gen && npm run build && node dist/index.mjs src/.oxlintrc.test.json"
   },
   "devDependencies": {
     "@types/node": "25.1.0",
