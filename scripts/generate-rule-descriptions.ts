@@ -13,7 +13,7 @@ const REPO_URL = "https://github.com/oxc-project/oxc-project.github.io.git";
 const DEFAULT_CLONE_DIR = join(tmpdir(), "oxc-project-site-temp-build");
 
 const RULES_GLOB_DIR = join("src", "docs", "guide", "usage", "linter", "rules");
-const OUTPUT_DIR = join(__dirname, "./");
+const OUTPUT_DIR = join(__dirname, "../src");
 const OUTPUT_FILE = join(OUTPUT_DIR, "rule-descriptions.json");
 
 function log(...args: unknown[]) {
@@ -117,7 +117,7 @@ function buildDescriptionsFromRepo(baseDir: string) {
 
 function saveDescriptions(obj: Record<string, Record<string, string>>) {
   ensureDir(OUTPUT_DIR);
-  writeFileSync(OUTPUT_FILE, JSON.stringify(obj, null, 2));
+  writeFileSync(OUTPUT_FILE, JSON.stringify(obj));
   log(`Saved descriptions to ${OUTPUT_FILE}`);
 }
 

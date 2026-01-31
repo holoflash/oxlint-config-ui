@@ -1,19 +1,18 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
 import readline from "readline";
 import { execSync, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
-import { join, dirname } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Action, State, OxlintRule, OxlintConfig, RuleStatus } from "./types.js";
 import { render } from "./rendering.js";
+import ruleDescriptionsRaw from "./rule-descriptions.json" with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const OXLINT_VERSION = "1.41.0";
-const TSGOLINT_VERSION = "0.11.1";
+const OXLINT_VERSION = "1.42.0";
+const TSGOLINT_VERSION = "0.11.4";
 
 const KEY_MAP: Record<string, Action> = {
   k: { type: "MOVE_UP" },
@@ -303,15 +302,8 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
     categories: {},
   };
   let configPath: string | null = null;
-
-  let descriptions: Record<string, Record<string, string>> = {};
-  const descriptionsPath = join(__dirname, "./", "rule-descriptions.json");
-
-  try {
-    if (fs.existsSync(descriptionsPath)) {
-      descriptions = JSON.parse(fs.readFileSync(descriptionsPath, "utf8"));
-    }
-  } catch {
+  const descriptions = ruleDescriptionsRaw as Record<string, Record<string, string>>;
+  if (!descriptions) {
     state.message = "Error: Couldn't find description.";
     state.messageType = "error";
   }

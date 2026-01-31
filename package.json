@@ -13,7 +13,7 @@
   "license": "MIT",
   "author": "holoflash",
   "bin": {
-    "oxlint-tui": "dist/index.js"
+    "oxlint-tui": "./dist/index.mjs"
   },
   "files": [
     "dist"
@@ -22,21 +22,23 @@
   "scripts": {
     "prepare": "husky",
     "dev": "tsx src/index.ts src/.oxlintrc.test.json",
-    "generate-rule-descriptions": "tsx src/generate-rule-descriptions.ts",
+    "generate-rule-descriptions": "tsx scripts/generate-rule-descriptions.ts",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
-    "build": "rm -rf dist && npm run generate-rule-descriptions && tsc --outDir dist && cp src/rule-descriptions.json dist/",
-    "build-run": "npm run build && node dist/index.js src/.oxlintrc.test.json"
+    "gen": "npm run generate-rule-descriptions",
+    "build": "npm run gen && tsdown",
+    "build-run": "npm run build && node dist/index.mjs src/.oxlintrc.test.json"
   },
   "devDependencies": {
-    "@types/node": "25.0.10",
-    "@typescript/native-preview": "7.0.0-dev.20260124.1",
+    "@types/node": "25.1.0",
+    "@typescript/native-preview": "7.0.0-dev.20260131.1",
     "husky": "9.1.7",
-    "oxfmt": "0.26.0",
-    "oxlint": "1.41.0",
-    "oxlint-tsgolint": "0.11.1",
+    "oxfmt": "0.27.0",
+    "oxlint": "1.42.0",
+    "oxlint-tsgolint": "0.11.4",
+    "tsdown": "0.20.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   },
