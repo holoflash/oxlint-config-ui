@@ -32,7 +32,7 @@ npx oxlint-tui
 
 ### Custom Config Path
 
-If your configuration file is located elsewhere or named differently:
+If you want to load an initial state from a specific config file:
 
 ```bash
 npx oxlint-tui ./configs/oxlint.json
@@ -69,9 +69,7 @@ oxlint-tui
 - Node.js >= 16
 - `oxlint` (The tool runs `npx oxlint --rules --format=json` internally to fetch definitions)
 
-## Roadmap
-
-The goal is to build this into a tool that not only reads the information provided by the oxlint CLI and your configuration file - but also allows to fully customize the configuration. Oxlint provides a lot more flexibility than just toggling rules on/off, so making this fully functional is going to require more work.
+## Contributing
 
 If you're willing and able, please feel free to [contribute to this project](https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md).
 
