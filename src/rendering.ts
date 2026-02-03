@@ -191,6 +191,12 @@ function drawDetails(
   }
 }
 
+export function updateScroll(idx: number, currentScroll: number, viewHeight: number): number {
+  if (idx < currentScroll) return idx;
+  if (idx >= currentScroll + viewHeight) return idx - viewHeight + 1;
+  return currentScroll;
+}
+
 export function render(): void {
   if (!state || !state.categories) {
     return;

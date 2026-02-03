@@ -1,37 +1,11 @@
-import fs from "node:fs";
+import fs from "node:fs"; // Keep fs for reading (loadRules), but we won't write.
 import readline from "readline";
 import { execSync, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Action, State, OxlintRule, OxlintConfig, RuleStatus } from "./types.js";
-import { render } from "./rendering.js";
+import { render, updateScroll } from "./rendering.js";
 import ruleDescriptionsRaw from "./rule-descriptions.json" with { type: "json" };
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const OXLINT_VERSION = "1.42.0";
-const TSGOLINT_VERSION = "0.11.4";
-
-const KEY_MAP: Record<string, Action> = {
-  k: { type: "MOVE_UP" },
-  up: { type: "MOVE_UP" },
-  down: { type: "MOVE_DOWN" },
-  j: { type: "MOVE_DOWN" },
-  left: { type: "MOVE_LEFT" },
-  h: { type: "MOVE_LEFT" },
-  right: { type: "MOVE_RIGHT" },
-  l: { type: "MOVE_RIGHT" },
-  return: { type: "OPEN_DOCS" },
-  enter: { type: "OPEN_DOCS" },
-  "1": { type: "SET_STATUS", value: "off" },
-  "2": { type: "SET_STATUS", value: "warn" },
-  "3": { type: "SET_STATUS", value: "error" },
-  q: { type: "EXIT" },
-  r: { type: "RUN_LINT" },
-  x: { type: "RUN_SINGLE_RULE" },
-};
+import { KEY_MAP, OXLINT_VERSION, TSGOLINT_VERSION } from "./config.js";
 
 export let state: State = {
   activePane: 0,
@@ -46,9 +20,10 @@ export let state: State = {
 };
 
 function updateConfig(rule: OxlintRule, newStatus: RuleStatus): void {
-  if (!state.configPath || !state.config) return;
+  if (!state.config) state.config = { rules: {} };
+  if (!state.config.rules) state.config.rules = {};
+
   try {
-    if (!state.config.rules) state.config.rules = {};
     const ruleName = rule.value;
     const canonicalKey =
       rule.scope === "oxc2" || rule.scope === "eslint" ? ruleName : `${rule.scope}/${ruleName}`;
@@ -58,11 +33,10 @@ function updateConfig(rule: OxlintRule, newStatus: RuleStatus): void {
       (key) => key === canonicalKey || key === ruleName || key.endsWith(`/${ruleName}`),
     );
     const targetKey = existingKey || canonicalKey;
-    rules[targetKey] = newStatus;
 
-    fs.writeFileSync(state.configPath, JSON.stringify(state.config, null, 2), "utf8");
+    rules[targetKey] = newStatus;
   } catch {
-    state.message = "Failed to write config file";
+    state.message = "Failed to update internal state";
     state.messageType = "error";
   }
 }
@@ -104,6 +78,15 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
 
   if (ruleName) {
     args.push("-A", "all", "-D", ruleName);
+  } else if (state.config && state.config.rules) {
+    // Convert in-memory config object to CLI arguments
+    // -D = Deny (Error), -W = Warn, -A = Allow (Off)
+    Object.entries(state.config.rules).forEach(([key, status]) => {
+      const val = Array.isArray(status) ? status[0] : status;
+      if (val === "error") args.push("-D", key);
+      else if (val === "warn") args.push("-W", key);
+      else if (val === "off") args.push("-A", key);
+    });
   }
 
   const child = spawn(npxCmd, args);
@@ -358,12 +341,6 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
     config,
     configPath,
   };
-}
-
-function updateScroll(idx: number, currentScroll: number, viewHeight: number): number {
-  if (idx < currentScroll) return idx;
-  if (idx >= currentScroll + viewHeight) return idx - viewHeight + 1;
-  return currentScroll;
 }
 
 function openUrl(url: string | undefined): void {
