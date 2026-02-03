@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, statSync, rmSync }
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
-import zlib from "node:zlib"; // Import zlib
+import zlib from "node:zlib";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
