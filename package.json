@@ -21,14 +21,14 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
-    "dev": "tsx src/index.ts src/.oxlintrc.test.json",
+    "dev": "tsx src/index.ts",
     "gen": "tsx scripts/generate-rule-descriptions.ts",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
     "build": "tsdown",
-    "build-run": "npm run gen && npm run build && node dist/index.mjs src/.oxlintrc.test.json"
+    "build-run": "npm run gen && npm run build && node dist/index.mjs"
   },
   "devDependencies": {
     "@types/node": "25.2.0",
