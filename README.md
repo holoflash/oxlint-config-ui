@@ -1,21 +1,22 @@
 # oxlint-tui
 
-A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling and visualizing [oxlint](https://github.com/oxc-project/oxc) rules and the number of warnings/errors they produce when toggled ON.
+A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling, and visualizing [oxlint](https://github.com/oxc-project/oxc) rules.
 
-It automatically loads your local configuration to show you the status of the rules toggled in your project and allows you to toggle them by selecting a rule in the Rules pane and pressing <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>. The config file is modified in real-time.
+It automatically loads your local configuration (if one exists) to show you the current status of your project. You can then toggle rules on the fly to see how they affect your codebase without altering your actual configuration file.
 
-**NOTE**: At the moment, comments will be erased from your configuration file when adding or toggling rules.
+**It serves as a playground:** Toggle rules in memory, run the linter, and see the results immediately.
 
 ![screenshot](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot.png)
 
 ## Why?
 
-Configuring linters often involves jumping between your editor, a massive JSON file, and web documentation. `oxlint-tui` tries to make the process easier by giving you an **interactive dashboard** right in your terminal.
+Configuring linters often involves jumping between your editor, a massive JSON file, and web documentation. `oxlint-tui` tries to make the process easier by giving you an **interactive dashboard** right in your terminal. It allows you to "try before you buy"—enabling strict rules temporarily to see how many errors they would produce.
 
 ## Features
 
-- **Config Aware**: provides information about the rules used in your project by loading `.oxlintrc.json`.
-- **Details**: View category, scope, fix, default and type-aware rule parameters at a glance.
+- **Non-Destructive**: Toggling rules happens entirely in memory. No changes are written to disk, making it safe to experiment without messing up your config or comments.
+- **Config Aware**: Automatically reads `.oxlintrc.json` to initialize the state, but works perfectly even if no config file exists.
+- **Details**: View category, scope, fix, default, and type-aware rule parameters at a glance.
 - **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
 - **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
 
