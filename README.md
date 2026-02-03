@@ -17,6 +17,8 @@ Configuring linters often involves jumping between your editor, a massive JSON f
 - **Non-Destructive**: Toggling rules happens entirely in memory. No changes are written to disk, making it safe to experiment without messing up your config or comments.
 - **Config Aware**: Automatically reads `.oxlintrc.json` to initialize the state, but works perfectly even if no config file exists.
 - **Details**: View category, scope, fix, default, and type-aware rule parameters at a glance.
+- **Hit Counts**: See exactly how many violations each rule triggers in your codebase. Hits are displayed next to the rule name (e.g., `no-debugger (3)`) and highlighted for clarity.
+- **Run All**: Quickly run every available rule (even those turned off) to see what else might be lurking in your code.
 - **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
 - **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
 
@@ -59,8 +61,9 @@ oxlint-tui
 | **1**           | Set selected rule to "off"              |
 | **2**           | Set selected rule to "warn"             |
 | **3**           | Set selected rule to "error"            |
-| **x**           | Run "oxlint" with the selected rule     |
-| **r**           | Run "oxlint with all enabled rules      |
+| **x**           | Run linter with the selected rule only  |
+| **r**           | Run linter with all activated rules     |
+| **a**           | Run linter with ALL available rules     |
 | **Enter**       | Open Rule Documentation in Browser      |
 | **q** / **Esc** | Quit                                    |
 

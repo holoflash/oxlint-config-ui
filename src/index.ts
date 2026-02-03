@@ -53,20 +53,24 @@ function updateConfig(rule: OxlintRule, newStatus: RuleStatus): void {
   }
 }
 
-function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
+function runLint({
+  rule = null,
+  isRunAll = false,
+}: { rule?: OxlintRule | null; isRunAll?: boolean } = {}): void {
   if (state.isLintInProgress) return;
 
   state.isLintInProgress = true;
 
   let ruleName = rule ? `${rule.scope}/${rule.value}` : null;
 
-  const typeAware = rule
-    ? rule.type_aware
-    : Object.values(state.rulesByCategory)
-        .flat()
-        .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
+  const typeAware =
+    rule || isRunAll
+      ? true
+      : Object.values(state.rulesByCategory)
+          .flat()
+          .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
-  state.message = "Linting";
+  state.message = isRunAll ? "Running all rules" : "Linting";
   if (ruleName) state.message += ` [${ruleName}]`;
   if (typeAware) state.message += " with --type-aware";
   state.message += "...";
@@ -88,11 +92,13 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
     args.push("--type-aware");
   }
 
-  if (ruleName) {
+  args.push("--format=json");
+
+  if (isRunAll) {
+    args.push("-A", "all", "-W", "all");
+  } else if (ruleName) {
     args.push("-A", "all", "-D", ruleName);
   } else if (state.config && state.config.rules) {
-    // Convert in-memory config object to CLI arguments
-    // -D = Deny (Error), -W = Warn, -A = Allow (Off)
     Object.entries(state.config.rules).forEach(([key, status]) => {
       const val = Array.isArray(status) ? status[0] : status;
       if (val === "error") args.push("-D", key);
@@ -113,26 +119,51 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
     stderrData += data;
   });
 
-  child.on("close", (code) => {
+  child.on("close", (_code) => {
     state.isLintInProgress = false;
 
-    const fullOutput = stdoutData + stderrData;
-    const summaryMatch = fullOutput.match(/Found (\d+) warnings? and (\d+) errors?/i);
+    try {
+      const output = JSON.parse(stdoutData || "{}");
+      const diagnostics = output.diagnostics || [];
+      const hitCounts: Record<string, number> = {};
 
-    if (summaryMatch) {
-      const errors = parseInt(summaryMatch[2]);
-      state.message = ruleName
-        ? `[${ruleName}] Found ${errors} issue${errors === 1 ? "" : "s"}`
-        : summaryMatch[0];
-      state.messageType = errors > 0 ? "error" : "warn";
-    } else if (
-      stdoutData.toLowerCase().includes("finished") ||
-      (code === 0 && stdoutData.length < 200)
-    ) {
-      state.message = "Linting passed! 0 issues found.";
-      if (ruleName) state.message = `[${ruleName}] ${state.message}`;
-      state.messageType = "success";
-    } else {
+      diagnostics.forEach((d: any) => {
+        const code = d.code;
+        hitCounts[code] = (hitCounts[code] || 0) + 1;
+      });
+
+      Object.keys(state.rulesByCategory).forEach((cat) => {
+        state.rulesByCategory[cat].forEach((r) => {
+          r.hits = 0;
+        });
+      });
+
+      Object.entries(hitCounts).forEach(([code, count]) => {
+        let ruleToUpdate: OxlintRule | undefined;
+        Object.values(state.rulesByCategory).some((rules) => {
+          ruleToUpdate = rules.find((r) => {
+            if (code === r.value) return true;
+            if (code === `${r.scope}/${r.value}`) return true;
+            if (code === `${r.scope}(${r.value})`) return true;
+            if (code.endsWith(`(${r.value})`)) return true;
+            return false;
+          });
+          return !!ruleToUpdate;
+        });
+        if (ruleToUpdate) ruleToUpdate.hits = count;
+      });
+
+      const errors = diagnostics.filter((d: any) => d.severity === "error").length;
+      const warnings = diagnostics.filter((d: any) => d.severity === "warning").length;
+
+      if (diagnostics.length > 0) {
+        state.message = `Found ${warnings} warning${warnings === 1 ? "" : "s"} and ${errors} error${errors === 1 ? "" : "s"}`;
+        state.messageType = errors > 0 ? "error" : "warn";
+      } else {
+        state.message = "Linting passed! 0 issues found.";
+        state.messageType = "success";
+      }
+    } catch {
       const cleanError = stderrData
         .split("\n")
         .filter(
@@ -143,6 +174,7 @@ function runLint({ rule = null }: { rule?: OxlintRule | null } = {}): void {
       state.message = cleanError ? `Error: ${cleanError.substring(0, 50)}...` : "Lint failed";
       state.messageType = "error";
     }
+
     render();
   });
 }
@@ -166,6 +198,10 @@ function execute(action: Action | null): void {
 
     case "RUN_LINT":
       runLint();
+      return;
+
+    case "RUN_ALL_RULES":
+      runLint({ isRunAll: true });
       return;
 
     case "RUN_SINGLE_RULE": {

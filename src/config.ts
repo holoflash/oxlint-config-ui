@@ -20,4 +20,5 @@ export const KEY_MAP: Record<string, Action> = {
   q: { type: "EXIT" },
   r: { type: "RUN_LINT" },
   x: { type: "RUN_SINGLE_RULE" },
+  a: { type: "RUN_ALL_RULES" },
 };

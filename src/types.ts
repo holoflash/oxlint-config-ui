@@ -14,6 +14,7 @@ export type OxlintRule = {
   configStatus: RuleStatus;
   isActive: boolean;
   description?: string;
+  hits?: number;
 };
 
 export type OxlintConfig = {
@@ -45,6 +46,7 @@ export type ActionType =
   | "OPEN_DOCS"
   | "EXIT"
   | "RUN_LINT"
+  | "RUN_ALL_RULES"
   | "RUN_SINGLE_RULE"
   | "SET_STATUS";
 

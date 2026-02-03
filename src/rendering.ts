@@ -51,7 +51,7 @@ function drawBox(
   items.slice(scrollOffset, scrollOffset + innerHeight).forEach((item, i) => {
     const absoluteIndex = scrollOffset + i;
     const isRule = typeof item !== "string";
-    const rawText = isRule ? item.value : item;
+    const rawText = isRule ? (item.hits ? `${item.value} (${item.hits})` : item.value) : item;
 
     let display =
       rawText.length > width - 4
@@ -64,6 +64,10 @@ function drawBox(
       if (ruleItem.configStatus === "error") itemColor = COLORS.error;
       else if (ruleItem.configStatus === "warn") itemColor = COLORS.warn;
       else if (ruleItem.isActive) itemColor = COLORS.success;
+
+      if (ruleItem.hits && ruleItem.hits > 0) {
+        itemColor = COLORS.highlight;
+      }
     }
 
     buffer.push(`\x1b[${y + 1 + i};${x + 2}H`);
@@ -253,7 +257,7 @@ export function render(): void {
 
   const footerConfig = state.configPath ? `Config: ${state.configPath}` : "No config loaded";
   buffer.push(
-    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Lint | X: Run rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
+    `\x1b[${rows - 1};2H${COLORS.dim}Arrows/HJKL: Nav | 1-3: Status | R: Active | A: All | X: Rule | Enter: Docs | Q: Quit | ${footerConfig}${COLORS.reset}`,
   );
 
   stdout.write(buffer.join(""));
