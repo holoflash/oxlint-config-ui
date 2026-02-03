@@ -22,12 +22,12 @@
   "scripts": {
     "prepare": "husky",
     "dev": "tsx src/index.ts",
-    "gen": "tsx scripts/generate-rule-descriptions.ts",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
-    "build": "tsdown",
+    "gen": "tsx scripts/generate-rule-descriptions.ts",
+    "build": "tsdown && cp src/rule-descriptions.br dist/",
     "build-run": "npm run gen && npm run build && node dist/index.mjs"
   },
   "devDependencies": {

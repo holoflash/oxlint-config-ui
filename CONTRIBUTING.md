@@ -16,7 +16,7 @@ Thank you for your interest in contributing!
 
 4. **Setup and workflow**
    - Run `npm install` to install dependencies. This will also set up our git hooks (we use [Husky](https://typicode.github.io/husky/)). If you ever notice hooks are not working, run `npx husky install` manually.
-   - Run `npm run gen` to generate rule descriptions locally.
+   - Run `npm run gen` to generate rule descriptions for local development.
    - Use `npm run lint` regularly to follow our best practices.
    - Make sure to run `npm run format` before you commit.
    - Before each commit, a pre-commit hook will automatically run `npm run format-check`, `npm run type-check`, and `npm run lint`. Your commit will be blocked if any of these checks fail.

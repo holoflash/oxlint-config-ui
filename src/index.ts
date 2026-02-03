@@ -1,12 +1,24 @@
-import fs from "node:fs"; // Keep fs for reading (loadRules), but we won't write.
+import fs from "node:fs";
+import zlib from "node:zlib";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import readline from "readline";
 import { execSync, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
 import type { Action, State, OxlintRule, OxlintConfig, RuleStatus } from "./types.js";
 import { render, updateScroll } from "./rendering.js";
-import ruleDescriptionsRaw from "./rule-descriptions.json" with { type: "json" };
 import { KEY_MAP, OXLINT_VERSION, TSGOLINT_VERSION } from "./config.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function loadDescriptions() {
+  const compressedPath = path.join(__dirname, "rule-descriptions.br");
+  if (fs.existsSync(compressedPath)) {
+    return JSON.parse(zlib.brotliDecompressSync(fs.readFileSync(compressedPath)).toString());
+  }
+}
+
+const ruleDescriptionsRaw = loadDescriptions();
 export let state: State = {
   activePane: 0,
   selectedCategoryIndex: 0,
@@ -285,7 +297,7 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
     categories: {},
   };
   let configPath: string | null = null;
-  const descriptions = ruleDescriptionsRaw as Record<string, Record<string, string>>;
+  const descriptions = ruleDescriptionsRaw;
   if (!descriptions) {
     state.message = "Error: Couldn't find description.";
     state.messageType = "error";
@@ -346,12 +358,10 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
 function openUrl(url: string | undefined): void {
   if (!url) return;
   const cmd = platform === "darwin" ? "open" : platform === "win32" ? "explorer" : "xdg-open";
-
   const process = spawn(cmd, [url], {
     detached: true,
     stdio: "ignore",
   });
-
   process.unref();
 }
 

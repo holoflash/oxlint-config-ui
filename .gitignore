@@ -23,4 +23,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .idea
 
 .DS_Store
-rule-descriptions.json
+rule-descriptions.br
