@@ -1,10 +1,9 @@
-// Thanks @connorshea https://github.com/connorshea/oxlint-config-generator/blob/main/scripts/generate-rule-descriptions.ts
-
 import { execSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, statSync, rmSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import zlib from "node:zlib"; // Import zlib
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,7 +13,7 @@ const DEFAULT_CLONE_DIR = join(tmpdir(), "oxc-project-site-temp-build");
 
 const RULES_GLOB_DIR = join("src", "docs", "guide", "usage", "linter", "rules");
 const OUTPUT_DIR = join(__dirname, "../src");
-const OUTPUT_FILE = join(OUTPUT_DIR, "rule-descriptions.json");
+const OUTPUT_FILE = join(OUTPUT_DIR, "rule-descriptions.br");
 
 function log(...args: unknown[]) {
   console.log("[generate-rule-descriptions]", ...args);
@@ -117,8 +116,20 @@ function buildDescriptionsFromRepo(baseDir: string) {
 
 function saveDescriptions(obj: Record<string, Record<string, string>>) {
   ensureDir(OUTPUT_DIR);
-  writeFileSync(OUTPUT_FILE, JSON.stringify(obj));
-  log(`Saved descriptions to ${OUTPUT_FILE}`);
+
+  const jsonString = JSON.stringify(obj);
+  const originalSize = Buffer.byteLength(jsonString);
+
+  const compressed = zlib.brotliCompressSync(jsonString, {
+    params: {
+      [zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+      [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+    },
+  });
+
+  writeFileSync(OUTPUT_FILE, compressed);
+  log(`Saved compressed descriptions to ${OUTPUT_FILE}`);
+  log(`Size: ${(originalSize / 1024).toFixed(2)}KB -> ${(compressed.length / 1024).toFixed(2)}KB`);
 }
 
 await (async function main() {
