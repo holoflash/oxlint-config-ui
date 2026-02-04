@@ -1,22 +1,11 @@
 import fs from "node:fs";
-import zlib from "node:zlib";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import readline from "readline";
 import { execSync, spawn } from "node:child_process";
 import { stdout, stdin, exit, platform, argv } from "node:process";
 import type { Action, State, OxlintRule, OxlintConfig, RuleStatus } from "./types.js";
 import { render, updateScroll } from "./rendering.js";
 import { KEY_MAP, OXLINT_VERSION, TSGOLINT_VERSION } from "./config.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function loadDescriptions() {
-  const compressedPath = path.join(__dirname, "rule-descriptions.br");
-  if (fs.existsSync(compressedPath)) {
-    return JSON.parse(zlib.brotliDecompressSync(fs.readFileSync(compressedPath)).toString());
-  }
-}
+import { loadDescriptions, openUrl, stripJsonComments } from "./utils.js";
 
 const ruleDescriptionsRaw = loadDescriptions();
 export let state: State = {
@@ -187,7 +176,7 @@ function execute(action: Action | null): void {
   const currentCategory = categories[selectedCategoryIndex];
   const currentCategoryRules = rulesByCategory[currentCategory] || [];
   const viewportHeight = stdout.rows - 8;
-  const statsBoxHeight = 7;
+  const statsBoxHeight = 3;
   const categoryListHeight = viewportHeight - statsBoxHeight;
 
   switch (action.type) {
@@ -322,10 +311,6 @@ function getRuleStatus(ruleName: string, category: string, config: OxlintConfig)
   return "off";
 }
 
-function stripJsonComments(json: string): string {
-  return json.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => (g ? "" : m));
-}
-
 function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | "configPath"> {
   let rulesData: any[] = [];
   let config: OxlintConfig = {
@@ -368,18 +353,40 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
   }
 
   const map: Record<string, OxlintRule[]> = {};
+  const fixableRules: OxlintRule[] = [];
+  const defaultRules: OxlintRule[] = [];
+  const typeAwareRules: OxlintRule[] = [];
+  const scopes: Record<string, OxlintRule[]> = {};
+
   rulesData.forEach((rule: any) => {
-    const cat = rule.category || "Uncategorized";
+    const cat = rule.category;
     if (!map[cat]) map[cat] = [];
     const status = getRuleStatus(rule.value, cat, config);
     const description = descriptions[rule.scope]?.[rule.value];
-
-    map[cat].push({
+    const ruleObj = {
       ...rule,
       description,
       configStatus: status,
       isActive: status === "error" || status === "warn",
-    });
+    };
+
+    if (rule.scope) {
+      if (!scopes[rule.scope]) scopes[rule.scope] = [];
+      scopes[rule.scope].push(ruleObj);
+    }
+
+    map[cat].push(ruleObj);
+    if (rule.fix && rule.fix !== "none" && rule.fix !== "pending") fixableRules.push(ruleObj);
+    if (rule.default === true) defaultRules.push(ruleObj);
+    if (rule.type_aware === true) typeAwareRules.push(ruleObj);
+  });
+
+  map["FIXABLE"] = fixableRules;
+  map["DEFAULT"] = defaultRules;
+  map["TYPE-AWARE"] = typeAwareRules;
+
+  Object.entries(scopes).forEach(([scope, rules]) => {
+    map[scope] = rules;
   });
 
   const categories = Object.keys(map).toSorted();
@@ -389,16 +396,6 @@ function loadRules(): Pick<State, "categories" | "rulesByCategory" | "config" | 
     config,
     configPath,
   };
-}
-
-function openUrl(url: string | undefined): void {
-  if (!url) return;
-  const cmd = platform === "darwin" ? "open" : platform === "win32" ? "explorer" : "xdg-open";
-  const process = spawn(cmd, [url], {
-    detached: true,
-    stdio: "ignore",
-  });
-  process.unref();
 }
 
 const write = (str: string) => stdout.write(str);
