@@ -1,6 +1,6 @@
 {
   "name": "oxlint-tui",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "A Node TUI Oxlint rules and configuration browser",
   "keywords": [
     "cli",
