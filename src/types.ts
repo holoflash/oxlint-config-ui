@@ -2,6 +2,8 @@ import type { COLORS } from "./rendering.js";
 
 export type RuleStatus = "off" | "warn" | "error";
 
+export type RulesState = Pick<State, "categories" | "rulesByCategory" | "config" | "configPath">;
+
 export type OxlintRule = {
   value: string;
   category: string;

@@ -1,6 +1,6 @@
-import { state } from "./index.js";
 import type { OxlintRule } from "./types.js";
 import { stdout } from "node:process";
+import { getState } from "./state.js";
 
 export const COLORS = {
   reset: "\x1b[0m",
@@ -202,6 +202,7 @@ export function updateScroll(idx: number, currentScroll: number, viewHeight: num
 }
 
 export function render(): void {
+  const state = getState();
   if (!state || !state.categories) {
     return;
   }

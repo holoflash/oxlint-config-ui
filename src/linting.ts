@@ -1,0 +1,148 @@
+import { spawn } from "node:child_process";
+import { platform } from "node:process";
+import type { OxlintRule } from "./types.js";
+import { getState, setMessage, setLintInProgress, updateRuleHits } from "./state.js";
+import { render } from "./rendering.js";
+import { OXLINT_VERSION, TSGOLINT_VERSION } from "./index.js";
+
+export interface LintOptions {
+  rule?: OxlintRule | null;
+  isRunAll?: boolean;
+}
+
+function buildLintArgs(options: LintOptions): string[] {
+  const { rule, isRunAll } = options;
+  const state = getState();
+
+  const typeAware =
+    rule || isRunAll
+      ? true
+      : Object.values(state.rulesByCategory)
+          .flat()
+          .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
+
+  const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
+
+  if (typeAware) {
+    args.push("--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`);
+  }
+
+  args.push("--", "oxlint");
+
+  if (typeAware) {
+    args.push("--type-aware");
+  }
+
+  args.push("--format=json");
+
+  if (isRunAll) {
+    args.push("-A", "all", "-W", "all");
+  } else if (rule) {
+    const ruleName = `${rule.scope}/${rule.value}`;
+    args.push("-A", "all", "-D", ruleName);
+  } else if (state.config && state.config.rules) {
+    Object.entries(state.config.rules).forEach(([key, status]) => {
+      const val = Array.isArray(status) ? status[0] : status;
+      if (val === "error") args.push("-D", key);
+      else if (val === "warn") args.push("-W", key);
+      else if (val === "off") args.push("-A", key);
+    });
+  }
+
+  return args;
+}
+
+function buildLintMessage(options: LintOptions): string {
+  const { rule, isRunAll } = options;
+  const state = getState();
+
+  const typeAware =
+    rule || isRunAll
+      ? true
+      : Object.values(state.rulesByCategory)
+          .flat()
+          .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
+
+  let message = isRunAll ? "Running all rules" : "Linting";
+
+  if (rule) {
+    const ruleName = `${rule.scope}/${rule.value}`;
+    message += ` [${ruleName}]`;
+  }
+
+  if (typeAware) {
+    message += " with --type-aware";
+  }
+
+  message += "...";
+
+  return message;
+}
+
+function processLintOutput(stdoutData: string, stderrData: string): void {
+  try {
+    const output = JSON.parse(stdoutData || "{}");
+    const diagnostics = output.diagnostics || [];
+    const hitCounts: Record<string, number> = {};
+
+    diagnostics.forEach((d: any) => {
+      const code = d.code;
+      hitCounts[code] = (hitCounts[code] || 0) + 1;
+    });
+
+    updateRuleHits(hitCounts);
+
+    const errors = diagnostics.filter((d: any) => d.severity === "error").length;
+    const warnings = diagnostics.filter((d: any) => d.severity === "warning").length;
+
+    if (diagnostics.length > 0) {
+      setMessage(
+        `Found ${warnings} warning${warnings === 1 ? "" : "s"} and ${errors} error${errors === 1 ? "" : "s"}`,
+        errors > 0 ? "error" : "warn",
+      );
+    } else {
+      setMessage("Linting passed! 0 issues found.", "success");
+    }
+  } catch {
+    const cleanError = stderrData
+      .split("\n")
+      .filter(
+        (l) => !l.includes("experimental") && !l.includes("Breaking changes") && l.trim() !== "",
+      )
+      .join(" ");
+
+    setMessage(cleanError ? `Error: ${cleanError.substring(0, 50)}...` : "Lint failed", "error");
+  }
+}
+
+export function runLint(options: LintOptions = {}): void {
+  const state = getState();
+
+  if (state.isLintInProgress) return;
+
+  setLintInProgress(true);
+  setMessage(buildLintMessage(options), "info");
+  render();
+
+  const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
+  const args = buildLintArgs(options);
+
+  const child = spawn(npxCmd, args);
+
+  let stdoutData = "";
+  let stderrData = "";
+
+  child.stdout.on("data", (data) => {
+    stdoutData += data;
+  });
+
+  child.stderr.on("data", (data) => {
+    stderrData += data;
+  });
+
+  child.on("close", () => {
+    setLintInProgress(false);
+    processLintOutput(stdoutData, stderrData);
+    render();
+  });
+}
