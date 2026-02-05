@@ -27,26 +27,37 @@ export function setLintInProgress(inProgress: boolean): void {
   state.isLintInProgress = inProgress;
 }
 
-export function updateRuleHits(hitCounts: Record<string, number>): void {
-  Object.keys(state.rulesByCategory).forEach((cat) => {
-    state.rulesByCategory[cat].forEach((r) => {
-      r.hits = 0;
+export function updateRuleHits(
+  hitCounts: Record<string, number>,
+  lintedRules?: OxlintRule[],
+): void {
+  if (lintedRules) {
+    lintedRules.forEach((rule) => {
+      rule.hits = 0;
     });
-  });
+  } else {
+    Object.keys(state.rulesByCategory).forEach((cat) => {
+      state.rulesByCategory[cat].forEach((r) => {
+        r.hits = 0;
+      });
+    });
+  }
 
   Object.entries(hitCounts).forEach(([code, count]) => {
-    let ruleToUpdate: OxlintRule | undefined;
     Object.values(state.rulesByCategory).some((rules) => {
-      ruleToUpdate = rules.find((r) => {
+      const ruleToUpdate = rules.find((r) => {
         if (code === r.value) return true;
         if (code === `${r.scope}/${r.value}`) return true;
         if (code === `${r.scope}(${r.value})`) return true;
         if (code.endsWith(`(${r.value})`)) return true;
         return false;
       });
-      return !!ruleToUpdate;
+      if (ruleToUpdate) {
+        ruleToUpdate.hits = count;
+        return true;
+      }
     });
-    if (ruleToUpdate) ruleToUpdate.hits = count;
+    return false;
   });
 }
 

@@ -79,7 +79,11 @@ function buildLintMessage(options: LintOptions): string {
   return message;
 }
 
-function processLintOutput(stdoutData: string, stderrData: string): void {
+function processLintOutput(
+  stdoutData: string,
+  stderrData: string,
+  lintedRules?: OxlintRule[],
+): void {
   try {
     const output = JSON.parse(stdoutData || "{}");
     const diagnostics = output.diagnostics || [];
@@ -90,7 +94,7 @@ function processLintOutput(stdoutData: string, stderrData: string): void {
       hitCounts[code] = (hitCounts[code] || 0) + 1;
     });
 
-    updateRuleHits(hitCounts);
+    updateRuleHits(hitCounts, lintedRules);
 
     const errors = diagnostics.filter((d: any) => d.severity === "error").length;
     const warnings = diagnostics.filter((d: any) => d.severity === "warning").length;
@@ -142,7 +146,16 @@ export function runLint(options: LintOptions = {}): void {
 
   child.on("close", () => {
     setLintInProgress(false);
-    processLintOutput(stdoutData, stderrData);
+
+    let lintedRules: OxlintRule[] | undefined;
+    if (options.rule) {
+      lintedRules = [options.rule];
+    } else if (!options.isRunAll) {
+      lintedRules = Object.values(getState().rulesByCategory)
+        .flat()
+        .filter((r) => r.isActive);
+    }
+    processLintOutput(stdoutData, stderrData, lintedRules);
     render();
   });
 }
