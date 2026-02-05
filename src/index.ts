@@ -4,9 +4,8 @@ import { render } from "./rendering.js";
 import { loadRules } from "./rules.js";
 import { initializeState } from "./state.js";
 import { setupKeyboardInput } from "./input.js";
-import { enterAltScreen } from "./terminal.js";
 
-export const OXLINT_VERSION = "1.42.0";
+export const OXLINT_VERSION = "1.43.0";
 export const TSGOLINT_VERSION = "0.11.4";
 
 function createInitialState(): State {
@@ -31,7 +30,7 @@ function main(): void {
 
   stdout.on("resize", render);
 
-  enterAltScreen();
+  stdout.write("\x1b[?1049h\x1b[?25l");
   render();
 }
 

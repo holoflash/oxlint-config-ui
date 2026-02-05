@@ -9,7 +9,6 @@ import {
   updateConfigRule,
 } from "./state.js";
 import { runLint } from "./linting.js";
-import { exitAltScreen } from "./terminal.js";
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
 
@@ -64,6 +63,10 @@ function handleOpenDocs(): void {
   }
 }
 
+function isDivider(category: string): boolean {
+  return category.startsWith("-");
+}
+
 function handleMoveVertical(direction: "up" | "down"): void {
   const state = getState();
   const { activePane, selectedCategoryIndex, selectedRuleIndex, categories } = state;
@@ -75,7 +78,7 @@ function handleMoveVertical(direction: "up" | "down"): void {
 
   if (activePane === 0) {
     const maxIndex = categories.length - 1;
-    const nextIndex =
+    let nextIndex =
       direction === "up"
         ? selectedCategoryIndex === 0
           ? maxIndex
@@ -83,6 +86,17 @@ function handleMoveVertical(direction: "up" | "down"): void {
         : selectedCategoryIndex === maxIndex
           ? 0
           : selectedCategoryIndex + 1;
+
+    while (isDivider(categories[nextIndex])) {
+      nextIndex =
+        direction === "up"
+          ? nextIndex === 0
+            ? maxIndex
+            : nextIndex - 1
+          : nextIndex === maxIndex
+            ? 0
+            : nextIndex + 1;
+    }
 
     setState({
       ...state,
@@ -130,7 +144,7 @@ export function executeAction(action: Action | null): void {
 
   switch (action.type) {
     case "EXIT":
-      exitAltScreen();
+      stdout.write("\x1b[?1049l\x1b[?25h");
       exit(0);
       return;
 

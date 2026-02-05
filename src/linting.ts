@@ -1,14 +1,9 @@
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
-import type { OxlintRule } from "./types.js";
+import type { LintOptions, OxlintRule } from "./types.js";
 import { getState, setMessage, setLintInProgress, updateRuleHits } from "./state.js";
 import { render } from "./rendering.js";
 import { OXLINT_VERSION, TSGOLINT_VERSION } from "./index.js";
-
-export interface LintOptions {
-  rule?: OxlintRule | null;
-  isRunAll?: boolean;
-}
 
 function buildLintArgs(options: LintOptions): string[] {
   const { rule, isRunAll } = options;

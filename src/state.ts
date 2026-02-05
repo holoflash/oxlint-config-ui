@@ -14,10 +14,6 @@ export function setState(newState: State): void {
   state = newState;
 }
 
-export function updateState(updates: Partial<State>): void {
-  state = { ...state, ...updates };
-}
-
 export function setMessage(message: string, messageType: State["messageType"]): void {
   state.message = message;
   state.messageType = messageType;
@@ -88,8 +84,4 @@ export function getCurrentCategory(): string {
 
 export function getCurrentCategoryRules(): OxlintRule[] {
   return state.rulesByCategory[getCurrentCategory()] || [];
-}
-
-export function getCurrentRule(): OxlintRule | undefined {
-  return getCurrentCategoryRules()[state.selectedRuleIndex];
 }

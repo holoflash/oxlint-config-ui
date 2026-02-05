@@ -40,18 +40,47 @@ function drawBox(
   const topBorder = `${borderColor}┌─ ${titleClean} `.padEnd(width + borderColor.length - 1, "─");
   buffer.push(`\x1b[${y};${x}H${topBorder}┐${COLORS.reset}`);
 
+  const innerHeight = height - 2;
+  const totalItems = items.length;
+  const needsScrollbar = totalItems > innerHeight;
+
+  let thumbStart = 0;
+  let thumbEnd = 0;
+  if (needsScrollbar) {
+    const thumbSize = Math.max(1, Math.floor((innerHeight * innerHeight) / totalItems));
+    const scrollRange = innerHeight - thumbSize;
+    const maxScroll = totalItems - innerHeight;
+    const scrollRatio = maxScroll > 0 ? scrollOffset / maxScroll : 0;
+    thumbStart = Math.floor(scrollRatio * scrollRange);
+    thumbEnd = thumbStart + thumbSize;
+  }
+
   for (let i = 1; i < height - 1; i++) {
-    buffer.push(`\x1b[${y + i};${x}H${borderColor}│${" ".repeat(width - 2)}│${COLORS.reset}`);
+    const scrollbarChar = needsScrollbar && i - 1 >= thumbStart && i - 1 < thumbEnd ? "┃" : "│";
+    buffer.push(
+      `\x1b[${y + i};${x}H${borderColor}│${" ".repeat(width - 2)}${scrollbarChar}${COLORS.reset}`,
+    );
   }
   buffer.push(
     `\x1b[${y + height - 1};${x}H${borderColor}└${"─".repeat(width - 2)}┘${COLORS.reset}`,
   );
 
-  const innerHeight = height - 2;
   items.slice(scrollOffset, scrollOffset + innerHeight).forEach((item, i) => {
     const absoluteIndex = scrollOffset + i;
     const isRule = typeof item !== "string";
     const rawText = isRule ? (item.hits ? `${item.value} (${item.hits})` : item.value) : item;
+    const isDivider = !isRule && rawText.startsWith("-");
+
+    if (isDivider) {
+      const label = rawText.replace(/-/g, "").trim();
+      const innerWidth = width - 2;
+      const labelPart = `─ ${label} `;
+      const remainingDashes = innerWidth - labelPart.length;
+      const rightChar = needsScrollbar && i >= thumbStart && i < thumbEnd ? "┨" : "┤";
+      const dividerLine = `├${labelPart}${"─".repeat(remainingDashes)}${rightChar}`;
+      buffer.push(`\x1b[${y + 1 + i};${x}H${borderColor}${dividerLine}${COLORS.reset}`);
+      return;
+    }
 
     let display =
       rawText.length > width - 4

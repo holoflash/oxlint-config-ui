@@ -117,9 +117,9 @@ function categorizeRules(
     }
   });
 
-  map["FIXABLE"] = fixableRules;
-  map["DEFAULT"] = defaultRules;
-  map["TYPE-AWARE"] = typeAwareRules;
+  map["fixable"] = fixableRules;
+  map["default"] = defaultRules;
+  map["type-aware"] = typeAwareRules;
 
   Object.entries(scopes).forEach(([scope, rules]) => {
     map[scope] = rules;
@@ -133,10 +133,27 @@ export function loadRules(): RulesState {
   const rulesData = fetchRulesFromOxlint();
   const { config, configPath } = loadConfig();
   const rulesByCategory = categorizeRules(rulesData, descriptions, config);
-  const categories = Object.keys(rulesByCategory).toSorted();
+
+  const specialCategories = ["default", "fixable", "type-aware"];
+
+  const ruleCategories = new Set(rulesData.map((r: any) => r.category));
+  const allKeys = Object.keys(rulesByCategory);
+  const scopes = allKeys.filter((k) => !specialCategories.includes(k) && !ruleCategories.has(k));
+  const categories = allKeys.filter((k) => !specialCategories.includes(k) && ruleCategories.has(k));
+
+  const groupedCategories = [
+    ...categories.toSorted(),
+    "-SCOPES",
+    ...scopes.toSorted(),
+    "-FILTERS",
+    ...specialCategories,
+  ];
+
+  rulesByCategory["-SCOPES"] = [];
+  rulesByCategory["-FILTERS"] = [];
 
   return {
-    categories,
+    categories: groupedCategories,
     rulesByCategory,
     config,
     configPath,

@@ -4,6 +4,11 @@ export type RuleStatus = "off" | "warn" | "error";
 
 export type RulesState = Pick<State, "categories" | "rulesByCategory" | "config" | "configPath">;
 
+export type LintOptions = {
+  rule?: OxlintRule | null;
+  isRunAll?: boolean;
+};
+
 export type OxlintRule = {
   value: string;
   category: string;
