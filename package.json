@@ -28,7 +28,8 @@
     "format-check": "oxfmt --check",
     "gen": "tsx scripts/generate-rule-descriptions.ts",
     "build": "tsdown && cp src/rule-descriptions.br dist/",
-    "build-run": "npm run gen && npm run build && node dist/index.mjs"
+    "build-run": "npm run gen && npm run build && node dist/index.mjs",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/node": "25.2.1",
