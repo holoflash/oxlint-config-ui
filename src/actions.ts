@@ -4,9 +4,9 @@ import render from "./render/index.js";
 import {
   getState,
   setState,
-  getCurrentCategory,
   getCurrentCategoryRules,
   updateConfigRule,
+  getCurrentCategory,
 } from "./state.js";
 import { runLint } from "./linting.js";
 import { spawn } from "node:child_process";
@@ -14,32 +14,35 @@ import { platform } from "node:process";
 
 function handleSetStatus(value: RuleStatus): void {
   const state = getState();
-  if (state.activePane !== 1) return;
-
-  const currentCategory = getCurrentCategory();
   const currentCategoryRules = getCurrentCategoryRules();
-  const rule = currentCategoryRules[state.selectedRuleIndex];
 
-  if (!rule) return;
+  if (state.activePane === 0) {
+    const category = getCurrentCategory();
+    for (const rule of currentCategoryRules) {
+      updateConfigRule(rule, value);
+      rule.configStatus = value;
+      rule.isActive = value === "error" || value === "warn";
+    }
 
-  updateConfigRule(rule, value);
+    setState({
+      ...state,
+      message: `All ${currentCategoryRules.length} rules in '${category}' set to: ${value}`,
+      messageType: "info",
+    });
+  } else if (state.activePane === 1) {
+    const rule = currentCategoryRules[state.selectedRuleIndex];
+    if (!rule) return;
 
-  const updatedRules = [...currentCategoryRules];
-  updatedRules[state.selectedRuleIndex] = {
-    ...rule,
-    configStatus: value,
-    isActive: value === "error" || value === "warn",
-  };
+    updateConfigRule(rule, value);
+    rule.configStatus = value;
+    rule.isActive = value === "error" || value === "warn";
 
-  setState({
-    ...state,
-    message: `Rule '${rule.value}' set to: ${value}`,
-    messageType: "info",
-    rulesByCategory: {
-      ...state.rulesByCategory,
-      [currentCategory]: updatedRules,
-    },
-  });
+    setState({
+      ...state,
+      message: `Rule '${rule.value}' set to: ${value}`,
+      messageType: "info",
+    });
+  }
 
   render();
 }

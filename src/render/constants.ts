@@ -34,7 +34,7 @@ export const SYMBOLS = {
 export const LABELS = {
   categories: "CATEGORIES",
   rules: "RULES",
-  stats: "STATS",
+  stats: "TOGGLED",
   details: "DETAILS",
   description: "Description:",
   noConfig: "No config loaded",
