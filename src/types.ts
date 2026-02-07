@@ -1,7 +1,6 @@
-import type { COLORS } from "./rendering.js";
+import type { ANSI } from "./render/index.js";
 
 export type RuleStatus = "off" | "warn" | "error";
-
 export type RulesState = Pick<State, "categories" | "rulesByCategory" | "config" | "configPath">;
 
 export type LintOptions = {
@@ -38,7 +37,7 @@ export type State = {
   ruleScroll: number;
   isLintInProgress: boolean;
   message: string;
-  messageType: keyof typeof COLORS;
+  messageType: keyof typeof ANSI;
   categories: string[];
   rulesByCategory: Record<string, OxlintRule[]>;
   config: OxlintConfig;

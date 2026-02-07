@@ -1,6 +1,6 @@
 import { stdout, exit } from "node:process";
 import type { Action, RuleStatus } from "./types.js";
-import { render, updateScroll } from "./rendering.js";
+import render from "./render/index.js";
 import {
   getState,
   setState,
@@ -137,6 +137,12 @@ function handleMoveHorizontal(direction: "left" | "right"): void {
     setState({ ...state, activePane: activePane - 1 });
     render();
   }
+}
+
+function updateScroll(idx: number, currentScroll: number, viewHeight: number): number {
+  if (idx < currentScroll) return idx;
+  if (idx >= currentScroll + viewHeight) return idx - viewHeight + 1;
+  return currentScroll;
 }
 
 export function executeAction(action: Action | null): void {

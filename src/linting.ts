@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { platform } from "node:process";
 import type { LintOptions, OxlintRule } from "./types.js";
 import { getState, setMessage, setLintInProgress, updateRuleHits } from "./state.js";
-import { render } from "./rendering.js";
+import render from "./render/index.js";
 import { OXLINT_VERSION, TSGOLINT_VERSION } from "./index.js";
 
 function buildLintArgs(options: LintOptions): string[] {

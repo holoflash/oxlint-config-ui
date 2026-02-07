@@ -1,6 +1,6 @@
 import { stdout } from "node:process";
 import type { State } from "./types.js";
-import { render } from "./rendering.js";
+import render from "./render/index.js";
 import { loadRules } from "./rules.js";
 import { initializeState } from "./state.js";
 import { setupKeyboardInput } from "./input.js";
