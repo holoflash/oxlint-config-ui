@@ -2,10 +2,6 @@ import type { State, OxlintRule, RuleStatus } from "./types.js";
 
 let state: State;
 
-export function initializeState(initialState: State): void {
-  state = initialState;
-}
-
 export function getState(): State {
   return state;
 }
