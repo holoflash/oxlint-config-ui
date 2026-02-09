@@ -1,4 +1,4 @@
-import type { ANSI } from "./render/index.js";
+import type { ANSI } from "./rendering/index.js";
 
 export type RuleStatus = "off" | "warn" | "error";
 export type RulesState = Pick<State, "categories" | "rulesByCategory" | "config" | "configPath">;
@@ -30,6 +30,8 @@ export type OxlintConfig = {
 };
 
 export type State = {
+  oxlintVersion: string;
+  tsgolintVersion: string;
   activePane: number;
   selectedCategoryIndex: number;
   selectedRuleIndex: number;

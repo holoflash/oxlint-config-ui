@@ -1,6 +1,26 @@
 import type { State, OxlintRule, RuleStatus } from "./types.js";
+import { loadRules } from "./oxlint/rules.js";
 
-let state: State;
+let state: State = {
+  oxlintVersion: "1.43.0",
+  tsgolintVersion: "0.11.4",
+  activePane: 0,
+  selectedCategoryIndex: 0,
+  selectedRuleIndex: 0,
+  categoryScroll: 0,
+  ruleScroll: 0,
+  isLintInProgress: false,
+  message: "oxlint-tui",
+  messageType: "dim",
+  categories: [],
+  rulesByCategory: {},
+  config: {},
+  configPath: null,
+};
+
+export function initializeState(): void {
+  state = { ...state, ...loadRules() };
+}
 
 export function getState(): State {
   return state;

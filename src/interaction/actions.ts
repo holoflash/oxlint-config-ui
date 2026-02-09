@@ -1,14 +1,14 @@
 import { stdout, exit } from "node:process";
-import type { Action, RuleStatus } from "./types.js";
-import render, { ANSI } from "./render/index.js";
+import type { Action, RuleStatus } from "../types.js";
+import render, { ANSI } from "../rendering/index.js";
 import {
   getState,
   setState,
   getCurrentCategoryRules,
   updateConfigRule,
   getCurrentCategory,
-} from "./state.js";
-import { runLint } from "./linting.js";
+} from "../state.js";
+import { runLint } from "../oxlint/linting.js";
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
 
