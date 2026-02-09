@@ -1,4 +1,6 @@
 export const ANSI = {
+  altScreenAndHideCursor: "\x1b[?1049h",
+  restoreTerminal: "\x1b[?1049l\x1b[?25h",
   clearScreen: "\x1b[H\x1b[J",
   reset: "\x1b[0m",
   dim: "\x1b[38;5;242m",

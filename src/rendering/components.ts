@@ -24,38 +24,49 @@ export function drawBoxFrame(
     width + borderColor.length - 1,
     BOX.horizontal,
   );
-  writeAt(buffer, row, col, `${topBorder}${BOX.topRight}${ANSI.reset}`);
+  writeAt({ buffer, row, col, content: `${topBorder}${BOX.topRight}${ANSI.reset}` });
 
   for (let i = 1; i <= innerHeight; i++) {
     const rightChar = getScrollbarChar ? getScrollbarChar(i - 1) : BOX.vertical;
-    writeAt(
+    writeAt({
       buffer,
-      row + i,
+      row: row + i,
       col,
-      `${borderColor}${BOX.vertical}${" ".repeat(width - LAYOUT.boxBorder)}${rightChar}${ANSI.reset}`,
-    );
+      content: `${borderColor}${BOX.vertical}${" ".repeat(width - LAYOUT.boxBorder)}${rightChar}${ANSI.reset}`,
+    });
   }
 
-  writeAt(
+  writeAt({
     buffer,
-    row + height - 1,
+    row: row + height - 1,
     col,
-    `${borderColor}${BOX.bottomLeft}${BOX.horizontal.repeat(width - LAYOUT.boxBorder)}${BOX.bottomRight}${ANSI.reset}`,
-  );
+    content: `${borderColor}${BOX.bottomLeft}${BOX.horizontal.repeat(width - LAYOUT.boxBorder)}${BOX.bottomRight}${ANSI.reset}`,
+  });
 }
 
-export function drawBox(
-  buffer: string[],
-  col: number,
-  row: number,
-  width: number,
-  height: number,
-  title: string,
-  items: (OxlintRule | string)[],
-  selectedIndex: number,
-  scrollOffset: number,
-  isActive: boolean,
-): void {
+export function drawBox({
+  buffer,
+  col,
+  row,
+  width,
+  height,
+  title,
+  items,
+  selectedIndex,
+  scrollOffset,
+  isActive,
+}: {
+  buffer: string[];
+  col: number;
+  row: number;
+  width: number;
+  height: number;
+  title: string;
+  items: (OxlintRule | string)[];
+  selectedIndex: number;
+  scrollOffset: number;
+  isActive: boolean;
+}): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
   const innerHeight = height - LAYOUT.boxBorder;
   const { needsScrollbar, thumbStart, thumbEnd } = calculateScrollThumb(
@@ -85,7 +96,12 @@ export function drawBox(
       const rightChar =
         needsScrollbar && i >= thumbStart && i < thumbEnd ? BOX.rightTThick : BOX.rightT;
       const dividerLine = `${BOX.leftT}${labelPart}${BOX.horizontal.repeat(remainingDashes)}${rightChar}`;
-      writeAt(buffer, row + 1 + i, col, `${borderColor}${dividerLine}${ANSI.reset}`);
+      writeAt({
+        buffer,
+        row: row + 1 + i,
+        col,
+        content: `${borderColor}${dividerLine}${ANSI.reset}`,
+      });
       return;
     }
 
@@ -105,7 +121,7 @@ export function drawBox(
       }
     }
 
-    writeAt(buffer, row + 1 + i, col + 2, "");
+    writeAt({ buffer, row: row + 1 + i, col: col + 2, content: "" });
     if (absoluteIndex === selectedIndex) {
       buffer.push(
         isActive ? colorize(display, ANSI.selectedBg) : colorize(display, ANSI.dim + ANSI.inverse),
@@ -116,14 +132,21 @@ export function drawBox(
   });
 }
 
-export function drawStats(
-  buffer: string[],
-  col: number,
-  row: number,
-  width: number,
-  height: number,
-  rules: OxlintRule[],
-): void {
+export function drawStats({
+  buffer,
+  col,
+  row,
+  width,
+  height,
+  rules,
+}: {
+  buffer: string[];
+  col: number;
+  row: number;
+  width: number;
+  height: number;
+  rules: OxlintRule[];
+}): void {
   const innerHeight = height - LAYOUT.boxBorder;
   drawBoxFrame(buffer, col, row, width, height, LABELS.stats, ANSI.borderInactive);
 
@@ -144,20 +167,33 @@ export function drawStats(
     if (i < innerHeight) {
       const numStr = String(line.count).padStart(3);
       const labelStr = line.label.padEnd(width - LAYOUT.statsLabelPadding);
-      writeAt(buffer, row + 1 + i, col + 2, colorize(`${labelStr}${numStr}`, line.color));
+      writeAt({
+        buffer,
+        row: row + 1 + i,
+        col: col + 2,
+        content: colorize(`${labelStr}${numStr}`, line.color),
+      });
     }
   });
 }
 
-export function drawDetails(
-  buffer: string[],
-  col: number,
-  row: number,
-  width: number,
-  height: number,
-  rule: OxlintRule | undefined,
-  isActive: boolean,
-): void {
+export function drawDetails({
+  buffer,
+  col,
+  row,
+  width,
+  height,
+  rule,
+  isActive,
+}: {
+  buffer: string[];
+  col: number;
+  row: number;
+  width: number;
+  height: number;
+  rule: OxlintRule | undefined;
+  isActive: boolean;
+}): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
   const innerHeight = height - LAYOUT.boxBorder;
   drawBoxFrame(buffer, col, row, width, height, LABELS.details, borderColor);
@@ -186,19 +222,19 @@ export function drawDetails(
 
   metadata.forEach(([lbl, val]) => {
     if (line < innerHeight) {
-      writeAt(
+      writeAt({
         buffer,
-        row + 1 + line,
-        col + 2,
-        `${colorize(lbl.padEnd(LAYOUT.labelWidth), ANSI.highlight)} ${val}`,
-      );
+        row: row + 1 + line,
+        col: col + 2,
+        content: `${colorize(lbl.padEnd(LAYOUT.labelWidth), ANSI.highlight)} ${val}`,
+      });
       line++;
     }
   });
 
   if (line < innerHeight - 1) line++;
   if (line < innerHeight) {
-    writeAt(buffer, row + 1 + line, col + 2, LABELS.description);
+    writeAt({ buffer, row: row + 1 + line, col: col + 2, content: LABELS.description });
     line++;
 
     const cleanDesc = (rule.description ?? LABELS.na).replace(/\s+/g, " ").trim();
@@ -206,7 +242,7 @@ export function drawDetails(
 
     chunks.forEach((chunk) => {
       if (line < innerHeight) {
-        writeAt(buffer, row + 1 + line, col + 2, colorize(chunk, ANSI.dim));
+        writeAt({ buffer, row: row + 1 + line, col: col + 2, content: colorize(chunk, ANSI.dim) });
         line++;
       }
     });
@@ -215,11 +251,11 @@ export function drawDetails(
   const footerLine = Math.max(line + 1, innerHeight - 1);
 
   if (footerLine < innerHeight + 1) {
-    writeAt(
+    writeAt({
       buffer,
-      row + 1 + footerLine,
-      col + 2,
-      `Hit ${colorize("ENTER", ANSI.highlight)} to open docs`,
-    );
+      row: row + 1 + footerLine,
+      col: col + 2,
+      content: `Hit ${colorize("ENTER", ANSI.highlight)} to open docs`,
+    });
   }
 }

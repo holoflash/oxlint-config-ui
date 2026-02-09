@@ -1,9 +1,8 @@
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
-import type { LintOptions, OxlintRule } from "./types.js";
-import { getState, setMessage, setLintInProgress, updateRuleHits } from "./state.js";
-import render from "./render/index.js";
-import { OXLINT_VERSION, TSGOLINT_VERSION } from "./index.js";
+import type { LintOptions, OxlintRule } from "../types.js";
+import { getState, setMessage, setLintInProgress, updateRuleHits } from "../state.js";
+import render from "../rendering/index.js";
 
 function buildLintArgs(options: LintOptions): string[] {
   const { rule, isRunAll } = options;
@@ -16,10 +15,10 @@ function buildLintArgs(options: LintOptions): string[] {
           .flat()
           .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
-  const args = ["-q", "--yes", "--package", `oxlint@${OXLINT_VERSION}`];
+  const args = ["-q", "--yes", "--package", `oxlint@${state.oxlintVersion}`];
 
   if (typeAware) {
-    args.push("--package", `oxlint-tsgolint@${TSGOLINT_VERSION}`);
+    args.push("--package", `oxlint-tsgolint@${state.tsgolintVersion}`);
   }
 
   args.push("--", "oxlint");

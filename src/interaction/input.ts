@@ -1,9 +1,9 @@
 import readline from "readline";
 import { stdin } from "node:process";
-import type { Action } from "./types.js";
+import type { Action } from "../types.js";
 import { executeAction } from "./actions.js";
 
-export const KEY_MAP: Record<string, Action> = {
+const KEY_MAP: Record<string, Action> = {
   k: { type: "MOVE_UP" },
   up: { type: "MOVE_UP" },
   down: { type: "MOVE_DOWN" },

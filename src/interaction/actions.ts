@@ -1,14 +1,14 @@
 import { stdout, exit } from "node:process";
-import type { Action, RuleStatus } from "./types.js";
-import render from "./render/index.js";
+import type { Action, RuleStatus } from "../types.js";
+import render, { ANSI } from "../rendering/index.js";
 import {
   getState,
   setState,
   getCurrentCategoryRules,
   updateConfigRule,
   getCurrentCategory,
-} from "./state.js";
-import { runLint } from "./linting.js";
+} from "../state.js";
+import { runLint } from "../oxlint/linting.js";
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
 
@@ -106,7 +106,11 @@ function handleMoveVertical(direction: "up" | "down"): void {
       selectedCategoryIndex: nextIndex,
       selectedRuleIndex: 0,
       ruleScroll: 0,
-      categoryScroll: updateScroll(nextIndex, state.categoryScroll, categoryListHeight),
+      categoryScroll: updateScroll(
+        nextIndex,
+        state.categoryScroll,
+        categoryListHeight - statsBoxHeight,
+      ),
     });
   } else if (activePane === 1) {
     const maxIndex = currentCategoryRules.length - 1;
@@ -153,7 +157,7 @@ export function executeAction(action: Action | null): void {
 
   switch (action.type) {
     case "EXIT":
-      stdout.write("\x1b[?1049l\x1b[?25h");
+      stdout.write(ANSI.restoreTerminal);
       exit(0);
       return;
 

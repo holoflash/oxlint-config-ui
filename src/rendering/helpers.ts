@@ -4,7 +4,17 @@ export function colorize(text: string, color: string): string {
   return `${color}${text}${ANSI.reset}`;
 }
 
-export function writeAt(buffer: string[], row: number, col: number, content: string): void {
+export function writeAt({
+  buffer,
+  row,
+  col,
+  content,
+}: {
+  buffer: string[];
+  row: number;
+  col: number;
+  content: string;
+}): void {
   buffer.push(`\x1b[${row};${col}H${content}`);
 }
 
