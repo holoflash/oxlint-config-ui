@@ -106,7 +106,11 @@ function handleMoveVertical(direction: "up" | "down"): void {
       selectedCategoryIndex: nextIndex,
       selectedRuleIndex: 0,
       ruleScroll: 0,
-      categoryScroll: updateScroll(nextIndex, state.categoryScroll, categoryListHeight),
+      categoryScroll: updateScroll(
+        nextIndex,
+        state.categoryScroll,
+        categoryListHeight - statsBoxHeight,
+      ),
     });
   } else if (activePane === 1) {
     const maxIndex = currentCategoryRules.length - 1;
