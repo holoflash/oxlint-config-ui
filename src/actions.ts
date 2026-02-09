@@ -1,6 +1,6 @@
 import { stdout, exit } from "node:process";
 import type { Action, RuleStatus } from "./types.js";
-import render from "./render/index.js";
+import render, { ANSI } from "./render/index.js";
 import {
   getState,
   setState,
@@ -153,7 +153,7 @@ export function executeAction(action: Action | null): void {
 
   switch (action.type) {
     case "EXIT":
-      stdout.write("\x1b[?1049l\x1b[?25h");
+      stdout.write(ANSI.restoreTerminal);
       exit(0);
       return;
 

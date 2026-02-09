@@ -1,6 +1,6 @@
 import { stdout } from "node:process";
 import type { State } from "./types.js";
-import render from "./render/index.js";
+import render, { ANSI } from "./render/index.js";
 import { loadRules } from "./rules.js";
 import { initializeState } from "./state.js";
 import { setupKeyboardInput } from "./input.js";
@@ -30,7 +30,7 @@ function main(): void {
 
   stdout.on("resize", render);
 
-  stdout.write("\x1b[?1049h\x1b[?25l");
+  stdout.write(ANSI.altScreenAndHideCursor);
   render();
 }
 
