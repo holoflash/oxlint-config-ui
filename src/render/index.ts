@@ -16,60 +16,71 @@ export default function render(): void {
   const currentCategory = state.categories[state.selectedCategoryIndex];
   const rules = state.rulesByCategory[currentCategory] || [];
   const rule = rules[state.selectedRuleIndex];
-
   const buffer = [ANSI.clearScreen];
-  drawBox(
+
+  // CATEGORIES
+  drawBox({
     buffer,
-    1,
-    1,
-    categoriesWidth,
-    categoryListHeight,
-    LABELS.categories,
-    state.categories,
-    state.selectedCategoryIndex,
-    state.categoryScroll,
-    state.activePane === 0,
-  );
-  drawStats(buffer, 1, 1 + categoryListHeight, categoriesWidth, LAYOUT.statsHeight, rules);
-  drawBox(
+    col: 1,
+    row: 1,
+    width: categoriesWidth,
+    height: categoryListHeight,
+    title: LABELS.categories,
+    items: state.categories,
+    selectedIndex: state.selectedCategoryIndex,
+    scrollOffset: state.categoryScroll,
+    isActive: state.activePane === 0,
+  });
+  // TOGGLED STATS
+  drawStats({
     buffer,
-    categoriesWidth + 1,
-    1,
-    rulesWidth,
-    boxHeight,
-    `${LABELS.rules} (${rules.length})`,
+    col: 1,
+    row: 1 + categoryListHeight,
+    width: categoriesWidth,
+    height: LAYOUT.statsHeight,
     rules,
-    state.selectedRuleIndex,
-    state.ruleScroll,
-    state.activePane === 1,
-  );
-  drawDetails(
+  });
+  // RULES
+  drawBox({
     buffer,
-    categoriesWidth + rulesWidth + 1,
-    1,
-    detailsWidth,
-    boxHeight,
+    col: categoriesWidth + 1,
+    row: 1,
+    width: rulesWidth,
+    height: boxHeight,
+    title: `${LABELS.rules} (${rules.length})`,
+    items: rules,
+    selectedIndex: state.selectedRuleIndex,
+    scrollOffset: state.ruleScroll,
+    isActive: state.activePane === 1,
+  });
+  // RULE DETAILS
+  drawDetails({
+    buffer,
+    col: categoriesWidth + rulesWidth + 1,
+    row: 1,
+    width: detailsWidth,
+    height: boxHeight,
     rule,
-    state.activePane === 2,
-  );
-
+    isActive: state.activePane === 2,
+  });
+  // MESSAGES
   const msgColor = ANSI[state.messageType] || ANSI.reset;
-  writeAt(
+  writeAt({
     buffer,
-    rows - LAYOUT.messageRow,
-    2,
-    `${msgColor}${SYMBOLS.bullet} ${state.message}${ANSI.reset}`,
-  );
-
+    row: rows - LAYOUT.messageRow,
+    col: 2,
+    content: `${msgColor}${SYMBOLS.bullet} ${state.message}${ANSI.reset}`,
+  });
+  // CONTROLS
   const footerConfig = state.configPath
     ? `${LABELS.configPrefix} ${state.configPath}`
     : LABELS.noConfig;
-  writeAt(
+  writeAt({
     buffer,
-    rows - LAYOUT.footerRow,
-    2,
-    colorize(`${LABELS.footer} | ${footerConfig}`, ANSI.dim),
-  );
+    row: rows - LAYOUT.footerRow,
+    col: 2,
+    content: colorize(`${LABELS.footer} | ${footerConfig}`, ANSI.dim),
+  });
 
   stdout.write(buffer.join(""));
 }
