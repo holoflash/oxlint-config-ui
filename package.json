@@ -1,6 +1,6 @@
 {
   "name": "oxlint-tui",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "description": "A lightweight, dependency-free Node.js TUI for browsing and running all available oxlint rules.",
   "keywords": [
     "cli",
