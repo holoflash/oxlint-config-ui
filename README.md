@@ -37,7 +37,7 @@ npx oxlint-tui
 If you want to load an initial state from a specific config file:
 
 ```bash
-npx oxlint-tui oxlintrc.json
+npx oxlint-tui < your-oxlint-config.json >
 ```
 
 ### Global Install

@@ -40,8 +40,8 @@ function fetchRulesFromOxlint(): any[] {
       stdio: ["ignore", "pipe", "ignore"],
     });
     return JSON.parse(raw);
-  } catch {
-    console.error("Error: Couldn't run 'npx oxlint'.");
+  } catch (error) {
+    console.error("Error: Couldn't run 'npx oxlint'.", error);
     exit(1);
   }
 }
@@ -65,10 +65,11 @@ function loadConfig(): { config: OxlintConfig; configPath: string | null } {
       config = JSON.parse(
         fs
           .readFileSync(configPath, "utf8")
+          .replace(/^\uFEFF/, "")
           .replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => (g ? "" : m)),
       );
-    } catch {
-      console.error("Error: Couldn't parse config.");
+    } catch (error) {
+      console.error("Error: Couldn't parse config: ", error);
     }
   }
   return { config, configPath };

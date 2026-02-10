@@ -3,7 +3,7 @@ import { loadRules } from "./oxlint/rules.js";
 
 let state: State = {
   oxlintVersion: "1.43.0",
-  tsgolintVersion: "0.11.4",
+  tsgolintVersion: "0.11.5",
   activePane: 0,
   selectedCategoryIndex: 0,
   selectedRuleIndex: 0,
