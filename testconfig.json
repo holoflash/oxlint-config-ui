@@ -1,0 +1,22 @@
+{
+  // This is a line comment
+  "rules": {
+    "foo": "error", // Inline comment
+    "bar": "warn", /* Block comment */
+    "baz": "off", // Another comment
+    "qux": "warn", // Trailing comma below
+  },
+  "categories": {
+    "correctness": "warn", // Category comment
+    "perf": "off", // Trailing comma below
+  },
+  "plugins": [
+    "eslint", // Plugin comment
+    "typescript", // Trailing comma below
+  ],
+  "ignorePatterns": [
+    "src/assets", // Ignore comment
+    "tests/**", // Trailing comma below
+  ],
+  // Trailing comma at top-level
+}

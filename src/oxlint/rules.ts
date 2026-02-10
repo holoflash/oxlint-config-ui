@@ -65,8 +65,9 @@ function loadConfig(): { config: OxlintConfig; configPath: string | null } {
       config = JSON.parse(
         fs
           .readFileSync(configPath, "utf8")
-          .replace(/^\uFEFF/, "")
-          .replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => (g ? "" : m)),
+          .replace(/^\uFEFF/, "") // Remove BOM
+          .replace(/"(?:[^"\\]|\\.)*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => (g ? "" : m)) // Remove comments
+          .replace(/,(\s*[}\]])/g, "$1"), // Remove trailing commas
       );
     } catch (error) {
       console.error("Error: Couldn't parse config: ", error);

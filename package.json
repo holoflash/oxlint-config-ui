@@ -21,7 +21,7 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/index.ts testconfig.json",
     "lint": "oxlint --type-aware --format=stylish",
     "type-check": "tsgo --noEmit",
     "format": "oxfmt",
