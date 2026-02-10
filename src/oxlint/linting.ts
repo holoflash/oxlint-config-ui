@@ -125,7 +125,9 @@ export function runLint(options: LintOptions = {}): void {
   const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
   const args = buildLintArgs(options);
 
-  const child = spawn(npxCmd, args);
+  const child = spawn(npxCmd, args, {
+    shell: platform === "win32",
+  });
 
   let stdoutData = "";
   let stderrData = "";

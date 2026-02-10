@@ -57,10 +57,12 @@ function handleOpenDocs(): void {
 
   if (rule) {
     if (!docsUrl) return;
-    const cmd = platform === "darwin" ? "open" : platform === "win32" ? "explorer" : "xdg-open";
-    const process = spawn(cmd, [docsUrl], {
+    const cmd = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
+    const args = platform === "win32" ? ["", docsUrl] : [docsUrl];
+    const process = spawn(cmd, args, {
       detached: true,
       stdio: "ignore",
+      shell: platform === "win32",
     });
     process.unref();
   }
