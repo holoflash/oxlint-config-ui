@@ -55,15 +55,27 @@ function handleOpenDocs(): void {
   const rule = currentCategoryRules[state.selectedRuleIndex];
   const docsUrl = rule.docs_url || rule.url;
 
-  if (rule) {
-    if (!docsUrl) return;
-    const cmd = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open";
-    const args = platform === "win32" ? ["", docsUrl] : [docsUrl];
+  if (rule && docsUrl) {
+    let cmd: string;
+    let args: string[];
+
+    if (platform === "win32") {
+      cmd = "cmd.exe";
+      args = ["/c", "start", '""', docsUrl];
+    } else if (platform === "darwin") {
+      cmd = "open";
+      args = [docsUrl];
+    } else {
+      cmd = "xdg-open";
+      args = [docsUrl];
+    }
+
     const process = spawn(cmd, args, {
       detached: true,
       stdio: "ignore",
-      shell: platform === "win32",
+      windowsHide: true,
     });
+
     process.unref();
   }
 }

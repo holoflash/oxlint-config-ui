@@ -115,18 +115,20 @@ function processLintOutput(
 
 export function runLint(options: LintOptions = {}): void {
   const state = getState();
-
   if (state.isLintInProgress) return;
 
   setLintInProgress(true);
   setMessage(buildLintMessage(options), "info");
   render();
 
-  const npxCmd = platform === "win32" ? "npx.cmd" : "npx";
   const args = buildLintArgs(options);
 
-  const child = spawn(npxCmd, args, {
-    shell: platform === "win32",
+  const isWin = platform === "win32";
+  const cmd = isWin ? "cmd.exe" : "npx";
+  const finalArgs = isWin ? ["/c", "npx", ...args] : args;
+
+  const child = spawn(cmd, finalArgs, {
+    windowsHide: true,
   });
 
   let stdoutData = "";
