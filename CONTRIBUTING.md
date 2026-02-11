@@ -19,7 +19,7 @@ Thank you for your interest in contributing!
    - Run `npm run gen` to generate rule descriptions for local development.
    - Use `npm run lint` regularly to follow our best practices.
    - Make sure to run `npm run format` before you commit.
-   - Before each commit, a pre-commit hook will automatically run `npm run format-check`, `npm run type-check`, and `npm run lint`. Your commit will be blocked if any of these checks fail.
+   - Before each commit, a pre-commit hook will automatically run `npm run format-check`, and `npm run lint`. Your commit will be blocked if any of these checks fail.
    - Make sure to run `npm run build-run` and confirm that the built version is working as expected.
 
 5. **Commit and push your changes**

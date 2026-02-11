@@ -22,8 +22,7 @@
   "scripts": {
     "prepare": "husky",
     "dev": "tsx src/index.ts testconfig.json",
-    "lint": "oxlint --type-aware --format=stylish",
-    "type-check": "tsgo --noEmit",
+    "lint": "oxlint --type-aware --type-check --format=stylish",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
     "gen": "tsx scripts/generate-rule-descriptions.ts",
