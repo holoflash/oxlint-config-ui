@@ -1,5 +1,5 @@
 import { stdout } from "node:process";
-import render, { ANSI } from "./rendering/index.js";
+import { render, ANSI } from "./rendering/render.js";
 import { setupKeyboardInput } from "./interaction/input.js";
 import { initializeState } from "./state.js";
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { exit, argv } from "node:process";
-import type { OxlintRule, OxlintConfig, RuleStatus, RulesState } from "../types.js";
+import type { OxlintRule, OxlintConfig, RuleStatus } from "../types.js";
 import { getState } from "../state.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -130,7 +130,7 @@ function categorizeRules(
   return map;
 }
 
-export function loadRules(): RulesState {
+export function loadRules() {
   const descriptions = loadDescriptions();
   const rulesData = fetchRulesFromOxlint();
   const { config, configPath } = loadConfig();

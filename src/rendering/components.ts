@@ -92,7 +92,7 @@ export function drawBox({
       const label = rawText.replace(/-/g, "").trim();
       const innerWidth = width - LAYOUT.boxBorder;
       const labelPart = `${BOX.horizontal} ${label} `;
-      const remainingDashes = innerWidth - labelPart.length;
+      const remainingDashes = Math.max(0, innerWidth - labelPart.length);
       const rightChar =
         needsScrollbar && i >= thumbStart && i < thumbEnd ? BOX.rightTThick : BOX.rightT;
       const dividerLine = `${BOX.leftT}${labelPart}${BOX.horizontal.repeat(remainingDashes)}${rightChar}`;

@@ -46,12 +46,40 @@ export function calculateScrollThumb(
   return { needsScrollbar, thumbStart, thumbEnd: thumbStart + thumbSize };
 }
 
+export function updateScroll(
+  index: number,
+  currentScroll: number,
+  viewHeight: number,
+  totalItems: number,
+): number {
+  const maxScroll = Math.max(0, totalItems - viewHeight);
+  let newScroll = Math.min(Math.max(0, currentScroll), maxScroll);
+
+  if (index < newScroll) {
+    newScroll = index;
+  } else if (index >= newScroll + viewHeight) {
+    newScroll = Math.min(index - viewHeight + 1, maxScroll);
+  }
+
+  return newScroll;
+}
+
 export function calculateLayout(columns: number, rows: number) {
   const boxHeight = rows - LAYOUT.mainPaddingBottom;
   const categoriesWidth = Math.floor(columns * LAYOUT.columnWidths.categories);
   const rulesWidth = Math.floor(columns * LAYOUT.columnWidths.rules);
   const detailsWidth = columns - categoriesWidth - rulesWidth - LAYOUT.columnGap;
   const categoryListHeight = boxHeight - LAYOUT.statsHeight;
+  const rulesViewportHeight = boxHeight - LAYOUT.boxBorder;
+  const categoriesViewportHeight = categoryListHeight - LAYOUT.boxBorder;
 
-  return { boxHeight, categoriesWidth, rulesWidth, detailsWidth, categoryListHeight };
+  return {
+    boxHeight,
+    categoriesWidth,
+    rulesWidth,
+    detailsWidth,
+    categoryListHeight,
+    rulesViewportHeight,
+    categoriesViewportHeight,
+  };
 }

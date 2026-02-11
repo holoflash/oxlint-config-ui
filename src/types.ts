@@ -1,7 +1,6 @@
-import type { ANSI } from "./rendering/index.js";
+import type { ANSI } from "./rendering/render.js";
 
 export type RuleStatus = "off" | "warn" | "error";
-export type RulesState = Pick<State, "categories" | "rulesByCategory" | "config" | "configPath">;
 
 export type LintOptions = {
   rule?: OxlintRule | null;
