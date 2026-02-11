@@ -1,68 +1,22 @@
 import { execSync } from "node:child_process";
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, statSync, rmSync } from "node:fs";
-import { join, dirname, relative } from "node:path";
+import { rmSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import zlib from "node:zlib";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+const ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO_URL = "https://github.com/oxc-project/oxc-project.github.io.git";
-const DEFAULT_CLONE_DIR = join(tmpdir(), "oxc-project-site-temp-build");
+const RULES_REL_PATH = "src/docs/guide/usage/linter/rules";
+const OUT_PATH = join(ROOT, "../src/oxlint/rule-descriptions.br");
 
-const RULES_GLOB_DIR = join("src", "docs", "guide", "usage", "linter", "rules");
-const OUTPUT_DIR = join(__dirname, "../src");
-const OUTPUT_FILE = join(OUTPUT_DIR, "rule-descriptions.br");
+const log = (msg: string, ...args: unknown[]) =>
+  console.log(`[generate-rule-descriptions] ${msg}`, ...args);
 
-function log(...args: unknown[]) {
-  console.log("[generate-rule-descriptions]", ...args);
-}
-
-function ensureDir(p: string) {
-  mkdirSync(p, { recursive: true });
-}
-
-function cloneOrUpdateRepo(cloneDir: string) {
-  if (statSyncSafe(cloneDir)) {
-    log(`Found existing temp repo at ${cloneDir}, attempting to update...`);
-    try {
-      execSync("git pull", { cwd: cloneDir, stdio: "inherit" });
-    } catch {
-      log("Failed to update repo, wiping and re-cloning...");
-      rmSync(cloneDir, { recursive: true, force: true });
-      ensureDir(dirname(cloneDir));
-      execSync(`git clone --depth 1 ${REPO_URL} "${cloneDir}"`, { stdio: "inherit" });
-    }
-  } else {
-    log(`Cloning ${REPO_URL} into temp dir ${cloneDir}...`);
-    ensureDir(dirname(cloneDir));
-    execSync(`git clone --depth 1 ${REPO_URL} "${cloneDir}"`, { stdio: "inherit" });
-  }
-}
-
-function statSyncSafe(path: string) {
-  try {
-    return statSync(path);
-  } catch {
-    return null;
-  }
-}
-
-function walkDir(dir: string, callback: (filePath: string) => void) {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      walkDir(full, callback);
-    } else {
-      callback(full);
-    }
-  }
-}
-
-function extractWhatItDoes(markdown: string) {
+function extractWhatItDoes(markdown: string): string {
   const md = markdown.replace(/\r/g, "");
+
   const ruleHeaderIndex = md.indexOf("<RuleHeader />");
   const mdAfterHeader = ruleHeaderIndex !== -1 ? md.slice(ruleHeaderIndex) : md;
 
@@ -74,6 +28,7 @@ function extractWhatItDoes(markdown: string) {
   const rest = mdAfterHeader.slice(startIndex);
   const nextHeadingMatch = rest.match(/^#{3}\s*.*$/m);
   const endIndex = nextHeadingMatch ? nextHeadingMatch.index : rest.length;
+
   let section = rest.slice(0, endIndex).trim();
 
   section = section.replace(/```[\s\S]*?```/g, "");
@@ -87,80 +42,71 @@ function extractWhatItDoes(markdown: string) {
   return section;
 }
 
-function buildDescriptionsFromRepo(baseDir: string) {
-  const targetDir = join(baseDir, RULES_GLOB_DIR);
-  const stats = statSyncSafe(targetDir);
-  if (!stats) {
-    throw new Error(`Rules directory not found in repo at ${targetDir}`);
-  }
-
-  const descriptions: Record<string, Record<string, string>> = {};
-
-  walkDir(targetDir, (filePath) => {
-    if (!filePath.endsWith(".md")) return;
-    const rel = relative(targetDir, filePath);
-    const parts = rel.split(/\/|\\/);
-    if (parts.length !== 2) return;
-    const [plugin, fileName] = parts;
-    const ruleName = fileName.replace(/\.md$/, "");
-
-    const content = readFileSync(filePath, "utf8");
-    const desc = extractWhatItDoes(content);
-
-    if (!descriptions[plugin]) descriptions[plugin] = {};
-    descriptions[plugin][ruleName] = desc;
-  });
-
-  return descriptions;
-}
-
-function saveDescriptions(obj: Record<string, Record<string, string>>) {
-  ensureDir(OUTPUT_DIR);
-
-  const jsonString = JSON.stringify(obj);
-  const originalSize = Buffer.byteLength(jsonString);
-
-  const compressed = zlib.brotliCompressSync(jsonString, {
-    params: {
-      [zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-      [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-    },
-  });
-
-  writeFileSync(OUTPUT_FILE, compressed);
-  log(`Saved compressed descriptions to ${OUTPUT_FILE}`);
-  log(`Size: ${(originalSize / 1024).toFixed(2)}KB -> ${(compressed.length / 1024).toFixed(2)}KB`);
-}
-
 await (async function main() {
   const args = process.argv.slice(2);
   const cloneDirArg = args.find((a) => a.startsWith("--clone-dir="));
-  const cloneDir = cloneDirArg ? cloneDirArg.split("=")[1] : DEFAULT_CLONE_DIR;
+  const cloneDir = cloneDirArg
+    ? cloneDirArg.split("=")[1]
+    : join(tmpdir(), "oxc-project-site-temp-build");
+  const skipClone = args.includes("--skip-clone");
 
   try {
-    const skipClone = args.includes("--skip-clone");
-
     if (!skipClone) {
-      cloneOrUpdateRepo(cloneDir);
-    } else {
-      log("--skip-clone provided; using existing repo at %s", cloneDir);
+      if (existsSync(cloneDir)) rmSync(cloneDir, { recursive: true, force: true });
+      log(`Cloning ${REPO_URL} (Sparse)...`);
+      mkdirSync(cloneDir, { recursive: true });
+      const opts = { cwd: cloneDir, stdio: "pipe" as const };
+
+      execSync(`git init --quiet`, opts);
+      execSync(`git remote add origin ${REPO_URL}`, opts);
+      execSync(`git config core.sparseCheckout true`, opts);
+      execSync(`git sparse-checkout set "${RULES_REL_PATH}"`, opts);
+      execSync(`git pull --quiet --depth 1 origin main`, opts);
     }
 
-    const descriptions = buildDescriptionsFromRepo(cloneDir);
-    saveDescriptions(descriptions);
+    const targetDir = join(cloneDir, RULES_REL_PATH);
+    const files = await readdir(targetDir, { recursive: true });
+    const descriptions: Record<string, Record<string, string>> = {};
 
-    log("Done. Total plugins:", Object.keys(descriptions).length);
+    await Promise.all(
+      files
+        .filter((f) => f.endsWith(".md"))
+        .map(async (file) => {
+          const parts = file.split(/[/\\]/);
+          if (parts.length !== 2) return;
+
+          const [plugin, fileName] = parts;
+          const ruleName = fileName.replace(/\.md$/, "");
+          const content = await readFile(join(targetDir, file), "utf8");
+          const desc = extractWhatItDoes(content);
+
+          if (!descriptions[plugin]) descriptions[plugin] = {};
+          descriptions[plugin][ruleName] = desc;
+        }),
+    );
+
+    const jsonString = JSON.stringify(descriptions);
+    const compressed = zlib.brotliCompressSync(jsonString, {
+      params: {
+        [zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+        [zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+      },
+    });
+
+    mkdirSync(dirname(OUT_PATH), { recursive: true });
+    writeFileSync(OUT_PATH, compressed);
+
+    log(`Saved to ${OUT_PATH}. Plugins: ${Object.keys(descriptions).length}`);
+    log(
+      `Size: ${(Buffer.byteLength(jsonString) / 1024).toFixed(2)}KB -> ${(compressed.length / 1024).toFixed(2)}KB`,
+    );
   } catch (err) {
     console.error(err);
     process.exit(1);
   } finally {
-    try {
-      if (!args.includes("--keep-temp")) {
-        log(`Cleaning up temporary directory: ${cloneDir}`);
-        rmSync(cloneDir, { recursive: true, force: true });
-      }
-    } catch (e) {
-      console.error("Failed to clean up temp dir:", e);
+    if (!args.includes("--keep-temp") && existsSync(cloneDir)) {
+      log(`Cleaning up: ${cloneDir}`);
+      rmSync(cloneDir, { recursive: true, force: true });
     }
   }
 })();

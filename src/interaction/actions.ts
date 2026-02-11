@@ -1,6 +1,7 @@
 import { stdout, exit } from "node:process";
 import type { Action, RuleStatus } from "../types.js";
-import render, { ANSI } from "../rendering/index.js";
+import { render, ANSI } from "../rendering/render.js";
+import { updateScroll, calculateLayout } from "../rendering/helpers.js";
 import {
   getState,
   setState,
@@ -89,9 +90,10 @@ function handleMoveVertical(direction: "up" | "down"): void {
   const { activePane, selectedCategoryIndex, selectedRuleIndex, categories } = state;
   const currentCategoryRules = getCurrentCategoryRules();
 
-  const viewportHeight = stdout.rows - 8;
-  const statsBoxHeight = 3;
-  const categoryListHeight = viewportHeight - statsBoxHeight;
+  const { rulesViewportHeight, categoriesViewportHeight } = calculateLayout(
+    stdout.columns,
+    stdout.rows,
+  );
 
   if (activePane === 0) {
     const maxIndex = categories.length - 1;
@@ -123,7 +125,8 @@ function handleMoveVertical(direction: "up" | "down"): void {
       categoryScroll: updateScroll(
         nextIndex,
         state.categoryScroll,
-        categoryListHeight - statsBoxHeight,
+        categoriesViewportHeight,
+        categories.length,
       ),
     });
   } else if (activePane === 1) {
@@ -140,7 +143,12 @@ function handleMoveVertical(direction: "up" | "down"): void {
     setState({
       ...state,
       selectedRuleIndex: nextIndex,
-      ruleScroll: updateScroll(nextIndex, state.ruleScroll, viewportHeight),
+      ruleScroll: updateScroll(
+        nextIndex,
+        state.ruleScroll,
+        rulesViewportHeight,
+        currentCategoryRules.length,
+      ),
     });
   }
 
@@ -158,12 +166,6 @@ function handleMoveHorizontal(direction: "left" | "right"): void {
     setState({ ...state, activePane: activePane - 1 });
     render();
   }
-}
-
-function updateScroll(idx: number, currentScroll: number, viewHeight: number): number {
-  if (idx < currentScroll) return idx;
-  if (idx >= currentScroll + viewHeight) return idx - viewHeight + 1;
-  return currentScroll;
 }
 
 export function executeAction(action: Action | null): void {

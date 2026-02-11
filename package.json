@@ -22,22 +22,21 @@
   "scripts": {
     "prepare": "husky",
     "dev": "tsx src/index.ts testconfig.json",
-    "lint": "oxlint --type-aware --format=stylish",
-    "type-check": "tsgo --noEmit",
+    "lint": "oxlint --type-aware --type-check --format=stylish",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
     "gen": "tsx scripts/generate-rule-descriptions.ts",
-    "build": "tsdown && cp src/rule-descriptions.br dist/",
+    "build": "tsdown && cp src/oxlint/rule-descriptions.br dist/",
     "build-run": "npm run gen && npm run build && node dist/index.mjs",
     "prepublishOnly": "npm run gen && npm run build"
   },
   "devDependencies": {
     "@types/node": "25.2.3",
-    "@typescript/native-preview": "7.0.0-dev.20260210.1",
+    "@typescript/native-preview": "7.0.0-dev.20260211.1",
     "husky": "9.1.7",
-    "oxfmt": "0.28.0",
-    "oxlint": "1.43.0",
-    "oxlint-tsgolint": "0.11.5",
+    "oxfmt": "0.31.0",
+    "oxlint": "1.46.0",
+    "oxlint-tsgolint": "0.12.0",
     "tsdown": "0.20.3",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
