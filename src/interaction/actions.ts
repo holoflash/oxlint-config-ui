@@ -1,7 +1,10 @@
 import { stdout, exit } from "node:process";
+import { spawn } from "node:child_process";
+import { platform } from "node:process";
 import type { Action, RuleStatus } from "../types.js";
 import { render, ANSI } from "../rendering/render.js";
-import { updateScroll, calculateLayout } from "../rendering/helpers.js";
+import { runLint } from "../oxlint/linting.js";
+import { calculateLayout, updateScroll } from "../rendering/layout.js";
 import {
   getState,
   setState,
@@ -9,9 +12,6 @@ import {
   updateConfigRule,
   getCurrentCategory,
 } from "../state.js";
-import { runLint } from "../oxlint/linting.js";
-import { spawn } from "node:child_process";
-import { platform } from "node:process";
 
 function handleSetStatus(value: RuleStatus): void {
   const state = getState();
@@ -90,10 +90,7 @@ function handleMoveVertical(direction: "up" | "down"): void {
   const { activePane, selectedCategoryIndex, selectedRuleIndex, categories } = state;
   const currentCategoryRules = getCurrentCategoryRules();
 
-  const { rulesViewportHeight, categoriesViewportHeight } = calculateLayout(
-    stdout.columns,
-    stdout.rows,
-  );
+  const layout = calculateLayout(stdout.columns, stdout.rows);
 
   if (activePane === 0) {
     const maxIndex = categories.length - 1;
@@ -125,7 +122,7 @@ function handleMoveVertical(direction: "up" | "down"): void {
       categoryScroll: updateScroll(
         nextIndex,
         state.categoryScroll,
-        categoriesViewportHeight,
+        layout.categories.viewportH,
         categories.length,
       ),
     });
@@ -146,7 +143,7 @@ function handleMoveVertical(direction: "up" | "down"): void {
       ruleScroll: updateScroll(
         nextIndex,
         state.ruleScroll,
-        rulesViewportHeight,
+        layout.rules.viewportH,
         currentCategoryRules.length,
       ),
     });
