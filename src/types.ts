@@ -61,3 +61,11 @@ export type Action = {
   type: ActionType;
   value?: RuleStatus;
 };
+
+export type TuiBox = {
+  col: number;
+  row: number;
+  width: number;
+  height: number;
+  viewportH?: number;
+};

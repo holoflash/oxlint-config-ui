@@ -1,117 +1,90 @@
 import { stdout } from "node:process";
 import { getState, setState } from "../state.js";
-import { ANSI, SYMBOLS, LABELS, LAYOUT } from "./constants.js";
-import { colorize, writeAt, calculateLayout, updateScroll } from "./helpers.js";
+import { ANSI, SYMBOLS, LABELS } from "./constants.js";
+import { colorize, writeAt } from "./helpers.js";
 import { drawBox, drawStats, drawDetails } from "./components.js";
+import { calculateLayout, updateScroll } from "./layout.js";
 export { ANSI } from "./constants.js";
 
 export function render(): void {
   const state = getState();
+  if (!state?.categories) return;
 
-  if (!state || !state.categories) {
-    return;
-  }
-  const { columns, rows } = stdout;
-  const layout = calculateLayout(columns, rows);
-  const {
-    boxHeight,
-    categoriesWidth,
-    rulesWidth,
-    detailsWidth,
-    categoryListHeight,
-    rulesViewportHeight,
-    categoriesViewportHeight,
-  } = layout;
+  const layout = calculateLayout(stdout.columns, stdout.rows);
+  const rules = state.rulesByCategory[state.categories[state.selectedCategoryIndex]];
 
-  const currentCategory = state.categories[state.selectedCategoryIndex];
-  const rules = state.rulesByCategory[currentCategory] || [];
-  const rule = rules[state.selectedRuleIndex];
-
-  const newRuleScroll = updateScroll(
+  const ruleScroll = updateScroll(
     state.selectedRuleIndex,
     state.ruleScroll,
-    rulesViewportHeight,
+    layout.rules.viewportH,
     rules.length,
   );
-  const newCategoryScroll = updateScroll(
+  const catScroll = updateScroll(
     state.selectedCategoryIndex,
     state.categoryScroll,
-    categoriesViewportHeight,
+    layout.categories.viewportH,
     state.categories.length,
   );
 
-  if (newRuleScroll !== state.ruleScroll || newCategoryScroll !== state.categoryScroll) {
-    setState({
-      ...state,
-      ruleScroll: newRuleScroll,
-      categoryScroll: newCategoryScroll,
-    });
+  if (ruleScroll !== state.ruleScroll || catScroll !== state.categoryScroll) {
+    setState({ ...state, ruleScroll, categoryScroll: catScroll });
   }
 
   const buffer = [ANSI.clearScreen];
 
-  // CATEGORIES
   drawBox({
     buffer,
-    col: 1,
-    row: 1,
-    width: categoriesWidth,
-    height: categoryListHeight,
+    tuiBox: layout.categories,
     title: LABELS.categories,
     items: state.categories,
     selectedIndex: state.selectedCategoryIndex,
-    scrollOffset: newCategoryScroll,
+    scrollOffset: catScroll,
     isActive: state.activePane === 0,
   });
-  // TOGGLED STATS
-  drawStats({
-    buffer,
-    col: 1,
-    row: 1 + categoryListHeight,
-    width: categoriesWidth,
-    height: LAYOUT.statsHeight,
-    rules,
-  });
-  // RULES
+
   drawBox({
     buffer,
-    col: categoriesWidth + 1,
-    row: 1,
-    width: rulesWidth,
-    height: boxHeight,
+    tuiBox: layout.categories,
+    title: LABELS.categories,
+    items: state.categories,
+    selectedIndex: state.selectedCategoryIndex,
+    scrollOffset: catScroll,
+    isActive: state.activePane === 0,
+  });
+
+  drawStats({
+    buffer,
+    tuiBox: layout.stats,
+    rules,
+  });
+
+  drawBox({
+    buffer,
+    tuiBox: layout.rules,
     title: `${LABELS.rules} (${rules.length})`,
     items: rules,
     selectedIndex: state.selectedRuleIndex,
-    scrollOffset: newRuleScroll,
+    scrollOffset: ruleScroll,
     isActive: state.activePane === 1,
   });
-  // RULE DETAILS
+
   drawDetails({
     buffer,
-    col: categoriesWidth + rulesWidth + 1,
-    row: 1,
-    width: detailsWidth,
-    height: boxHeight,
-    rule,
+    tuiBox: layout.details,
+    rule: rules[state.selectedRuleIndex],
     isActive: state.activePane === 2,
   });
-  // MESSAGES
-  const msgColor = ANSI[state.messageType] || ANSI.reset;
+
   writeAt({
     buffer,
-    row: rows - LAYOUT.messageRow,
-    col: 2,
-    content: `${msgColor}${SYMBOLS.bullet} ${state.message}${ANSI.reset}`,
+    ...layout.messages,
+    content: `${ANSI[state.messageType] || ANSI.reset}${SYMBOLS.bullet} ${state.message}${ANSI.reset}`,
   });
-  // CONTROLS
-  const footerConfig = state.configPath
-    ? `${LABELS.configPrefix} ${state.configPath}`
-    : LABELS.noConfig;
+
   writeAt({
     buffer,
-    row: rows - LAYOUT.footerRow,
-    col: 2,
-    content: colorize(`${LABELS.footer} | ${footerConfig}`, ANSI.dim),
+    ...layout.footer,
+    content: colorize(`${LABELS.footer} | ${state.configPath || LABELS.noConfig}`, ANSI.dim),
   });
 
   stdout.write(buffer.join(""));
