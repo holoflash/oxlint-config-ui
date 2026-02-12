@@ -34,7 +34,17 @@ export function render(): void {
 
   drawBox({
     buffer,
-    ...layout.categories,
+    tuiBox: layout.categories,
+    title: LABELS.categories,
+    items: state.categories,
+    selectedIndex: state.selectedCategoryIndex,
+    scrollOffset: catScroll,
+    isActive: state.activePane === 0,
+  });
+
+  drawBox({
+    buffer,
+    tuiBox: layout.categories,
     title: LABELS.categories,
     items: state.categories,
     selectedIndex: state.selectedCategoryIndex,
@@ -44,13 +54,13 @@ export function render(): void {
 
   drawStats({
     buffer,
-    ...layout.stats,
+    tuiBox: layout.stats,
     rules,
   });
 
   drawBox({
     buffer,
-    ...layout.rules,
+    tuiBox: layout.rules,
     title: `${LABELS.rules} (${rules.length})`,
     items: rules,
     selectedIndex: state.selectedRuleIndex,
@@ -60,7 +70,7 @@ export function render(): void {
 
   drawDetails({
     buffer,
-    ...layout.details,
+    tuiBox: layout.details,
     rule: rules[state.selectedRuleIndex],
     isActive: state.activePane === 2,
   });

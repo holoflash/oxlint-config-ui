@@ -1,16 +1,16 @@
-import type { OxlintRule, Rect } from "../types.js";
+import type { OxlintRule, TuiBox } from "../types.js";
 import { ANSI, BOX, LABELS, LAYOUT, DETAIL_FIELDS } from "./constants.js";
 import { colorize, writeAt, chunkString, truncateWithEllipsis } from "./helpers.js";
 import { calculateScrollThumb } from "./layout.js";
 
 export function drawBoxFrame(
   buffer: string[],
-  rect: Rect,
+  tuiBox: TuiBox,
   title: string,
   borderColor: string,
   getScrollbarChar?: (rowIndex: number) => string,
 ): void {
-  const { col, row, width, height } = rect;
+  const { col, row, width, height } = tuiBox;
   const innerHeight = height - LAYOUT.boxBorder;
 
   const titleClean = truncateWithEllipsis(title, width - LAYOUT.titlePadding);
@@ -46,7 +46,7 @@ export function drawBox({
   scrollOffset,
   isActive,
   title,
-  ...rect
+  tuiBox,
 }: {
   buffer: string[];
   items: (OxlintRule | string)[];
@@ -54,9 +54,10 @@ export function drawBox({
   scrollOffset: number;
   isActive: boolean;
   title: string;
-} & Rect): void {
+  tuiBox: TuiBox;
+}): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
-  const innerHeight = rect.height - LAYOUT.boxBorder;
+  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
 
   const { needsScrollbar, thumbStart, thumbEnd } = calculateScrollThumb(
     items.length,
@@ -67,7 +68,7 @@ export function drawBox({
   const getScrollbarChar = (i: number) =>
     needsScrollbar && i >= thumbStart && i < thumbEnd ? BOX.verticalThick : BOX.vertical;
 
-  drawBoxFrame(buffer, rect, title, borderColor, getScrollbarChar);
+  drawBoxFrame(buffer, tuiBox, title, borderColor, getScrollbarChar);
 
   items.slice(scrollOffset, scrollOffset + innerHeight).forEach((item, i) => {
     const absoluteIndex = scrollOffset + i;
@@ -76,7 +77,7 @@ export function drawBox({
 
     if (!isRule && rawText.startsWith("-")) {
       const label = rawText.replace(/-/g, "").trim();
-      const innerWidth = rect.width - LAYOUT.boxBorder;
+      const innerWidth = tuiBox.width - LAYOUT.boxBorder;
       const labelPart = `${BOX.horizontal} ${label} `;
       const remainingDashes = Math.max(0, innerWidth - labelPart.length);
 
@@ -87,15 +88,15 @@ export function drawBox({
 
       writeAt({
         buffer,
-        row: rect.row + 1 + i,
-        col: rect.col,
+        row: tuiBox.row + 1 + i,
+        col: tuiBox.col,
         content: `${borderColor}${dividerLine}${ANSI.reset}`,
       });
       return;
     }
 
-    const display = truncateWithEllipsis(rawText, rect.width - LAYOUT.contentPadding).padEnd(
-      rect.width - LAYOUT.contentPadding,
+    const display = truncateWithEllipsis(rawText, tuiBox.width - LAYOUT.contentPadding).padEnd(
+      tuiBox.width - LAYOUT.contentPadding,
     );
 
     let itemColor: string = ANSI.dim;
@@ -106,7 +107,7 @@ export function drawBox({
       if (item.hits && item.hits > 0) itemColor = ANSI.highlight;
     }
 
-    writeAt({ buffer, row: rect.row + 1 + i, col: rect.col + 2, content: "" });
+    writeAt({ buffer, row: tuiBox.row + 1 + i, col: tuiBox.col + 2, content: "" });
 
     if (absoluteIndex === selectedIndex) {
       buffer.push(
@@ -121,13 +122,14 @@ export function drawBox({
 export function drawStats({
   buffer,
   rules,
-  ...rect
+  tuiBox,
 }: {
   buffer: string[];
   rules: OxlintRule[];
-} & Rect): void {
-  const innerHeight = rect.height - LAYOUT.boxBorder;
-  drawBoxFrame(buffer, rect, LABELS.stats, ANSI.borderInactive);
+  tuiBox: TuiBox;
+}): void {
+  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
+  drawBoxFrame(buffer, tuiBox, LABELS.stats, ANSI.borderInactive);
 
   const counts = { error: 0, warn: 0, off: 0 };
   rules.forEach((r) => {
@@ -145,11 +147,11 @@ export function drawStats({
   lines.forEach((line, i) => {
     if (i < innerHeight) {
       const numStr = String(line.count).padStart(3);
-      const labelStr = line.label.padEnd(rect.width - LAYOUT.statsLabelPadding);
+      const labelStr = line.label.padEnd(tuiBox.width - LAYOUT.statsLabelPadding);
       writeAt({
         buffer,
-        row: rect.row + 1 + i,
-        col: rect.col + 2,
+        row: tuiBox.row + 1 + i,
+        col: tuiBox.col + 2,
         content: colorize(`${labelStr}${numStr}`, line.color),
       });
     }
@@ -160,16 +162,17 @@ export function drawDetails({
   buffer,
   rule,
   isActive,
-  ...rect
+  tuiBox,
 }: {
   buffer: string[];
   rule: OxlintRule | undefined;
   isActive: boolean;
-} & Rect): void {
+  tuiBox: TuiBox;
+}): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
-  const innerHeight = rect.height - LAYOUT.boxBorder;
+  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
 
-  drawBoxFrame(buffer, rect, LABELS.details, borderColor);
+  drawBoxFrame(buffer, tuiBox, LABELS.details, borderColor);
 
   if (!rule) return;
 
@@ -196,8 +199,8 @@ export function drawDetails({
     if (line < innerHeight) {
       writeAt({
         buffer,
-        row: rect.row + 1 + line,
-        col: rect.col + 2,
+        row: tuiBox.row + 1 + line,
+        col: tuiBox.col + 2,
         content: `${colorize(lbl.padEnd(LAYOUT.labelWidth), ANSI.highlight)} ${val}`,
       });
       line++;
@@ -206,18 +209,23 @@ export function drawDetails({
 
   if (line < innerHeight - 1) line++;
   if (line < innerHeight) {
-    writeAt({ buffer, row: rect.row + 1 + line, col: rect.col + 2, content: LABELS.description });
+    writeAt({
+      buffer,
+      row: tuiBox.row + 1 + line,
+      col: tuiBox.col + 2,
+      content: LABELS.description,
+    });
     line++;
 
     const cleanDesc = (rule.description ?? LABELS.na).replace(/\s+/g, " ").trim();
-    const chunks = chunkString(cleanDesc, rect.width - LAYOUT.descriptionPadding);
+    const chunks = chunkString(cleanDesc, tuiBox.width - LAYOUT.descriptionPadding);
 
     chunks.forEach((chunk) => {
       if (line < innerHeight) {
         writeAt({
           buffer,
-          row: rect.row + 1 + line,
-          col: rect.col + 2,
+          row: tuiBox.row + 1 + line,
+          col: tuiBox.col + 2,
           content: colorize(chunk, ANSI.dim),
         });
         line++;
@@ -229,8 +237,8 @@ export function drawDetails({
   if (footerLine < innerHeight + 1) {
     writeAt({
       buffer,
-      row: rect.row + 1 + footerLine,
-      col: rect.col + 2,
+      row: tuiBox.row + 1 + footerLine,
+      col: tuiBox.col + 2,
       content: `Hit ${colorize("ENTER", ANSI.highlight)} to open docs`,
     });
   }

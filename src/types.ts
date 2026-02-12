@@ -62,7 +62,7 @@ export type Action = {
   value?: RuleStatus;
 };
 
-export type Rect = {
+export type TuiBox = {
   col: number;
   row: number;
   width: number;
