@@ -1,6 +1,6 @@
 # oxlint-tui
 
-A lightweight, dependency-free Node.js Terminal User Interface (TUI) for browsing, toggling, and visualizing [oxlint](https://github.com/oxc-project/oxc) rules.
+A lightweight, dependency-free Node.js TUI for browsing and running all available [oxlint](https://www.npmjs.com/package/oxlint) rules.
 
 It automatically loads your local configuration (if one exists) to show you the current status of your project. You can then toggle rules on the fly to see how they affect your codebase without altering your actual configuration file.
 
@@ -69,8 +69,8 @@ oxlint-tui
 
 ## Requirements
 
-- Node.js >= 16
-- `oxlint` (The tool runs `npx oxlint --rules --format=json` internally to fetch definitions)
+- Node.js >= 20
+- The tool runs `npx oxlint` and `npx oxlint-tsgolint` internally.
 
 ## Contributing
 
