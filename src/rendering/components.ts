@@ -342,13 +342,12 @@ export function drawInsightsView({
 
       const label = item.name.padEnd(20);
       const percentStr = `${percentage}%`.padStart(4);
-      const countStr = `(${item.count})`.padStart(6);
 
       writeAt({
         buffer,
         row,
         col: tuiBox.col + padding,
-        content: `${label} ${colorize(percentStr, ANSI.highlight)} ${colorize(countStr, ANSI.dim)}`,
+        content: `${label} ${colorize(percentStr, ANSI.highlight)}`,
       });
     }
   });
