@@ -321,7 +321,7 @@ export function drawInsightsView({
       buffer,
       row: tuiBox.row + 2,
       col: tuiBox.col + 2,
-      content: colorize("No rule categories found!", ANSI.dim),
+      content: colorize("No rule violations found!", ANSI.success),
     });
     return;
   }
