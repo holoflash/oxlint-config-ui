@@ -1,25 +1,29 @@
 import { LAYOUT } from "./constants.js";
 
 export function calculateLayout(columns: number, rows: number) {
-  const { columnWidths, columnGap, statsHeight, boxBorder, mainPaddingBottom } = LAYOUT;
+  const { columnWidths, toggledHeight, boxBorder, mainPaddingBottom, columnGap } = LAYOUT;
   const totalHeight = rows - mainPaddingBottom;
 
   const catW = Math.floor(columns * columnWidths.categories);
   const rulesW = Math.floor(columns * columnWidths.rules);
-  const detailsW = columns - catW - rulesW - columnGap;
-  const catH = totalHeight - statsHeight;
+
+  const detailsW = columns - catW - rulesW - columnGap * 2;
+  const catH = totalHeight - toggledHeight;
+
+  const rulesCol = catW + columnGap + 1;
+  const detailsCol = rulesCol + rulesW + columnGap;
 
   return {
     categories: { col: 1, row: 1, width: catW, height: catH, viewportH: catH - boxBorder },
-    stats: { col: 1, row: 1 + catH, width: catW, height: statsHeight },
+    toggled: { col: 1, row: 1 + catH, width: catW, height: toggledHeight },
     rules: {
-      col: catW + 1,
+      col: rulesCol,
       row: 1,
       width: rulesW,
       height: totalHeight,
       viewportH: totalHeight - boxBorder,
     },
-    details: { col: catW + rulesW + 1, row: 1, width: detailsW, height: totalHeight },
+    details: { col: detailsCol, row: 1, width: detailsW, height: totalHeight },
     messages: { col: 2, row: rows - LAYOUT.messageRow },
     footer: { col: 2, row: rows - LAYOUT.footerRow },
   };

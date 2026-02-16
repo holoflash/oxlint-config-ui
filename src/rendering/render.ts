@@ -1,8 +1,8 @@
 import { stdout } from "node:process";
 import { getState, setState } from "../state.js";
 import { ANSI, SYMBOLS, LABELS } from "./constants.js";
-import { colorize, writeAt } from "./helpers.js";
-import { drawBox, drawStats, drawDetails } from "./components.js";
+import { colorize, writeAt, formatFooter } from "./helpers.js";
+import { drawBox, drawToggled, drawDetails, drawInsightsView } from "./components.js";
 import { calculateLayout, updateScroll } from "./layout.js";
 export { ANSI } from "./constants.js";
 
@@ -32,48 +32,54 @@ export function render(): void {
 
   const buffer = [ANSI.clearScreen];
 
-  drawBox({
-    buffer,
-    tuiBox: layout.categories,
-    title: LABELS.categories,
-    items: state.categories,
-    selectedIndex: state.selectedCategoryIndex,
-    scrollOffset: catScroll,
-    isActive: state.activePane === 0,
-  });
+  if (state.showInsights) {
+    drawInsightsView({
+      buffer,
+      tuiBox: {
+        col: 1,
+        row: 1,
+        width: stdout.columns,
+        height: layout.rules.height,
+      },
+      insightsData: state.insightsData,
+      rulesByCategory: state.rulesByCategory,
+      categories: state.categories,
+    });
+  } else {
+    drawBox({
+      buffer,
+      tuiBox: layout.categories,
+      title: LABELS.categories,
+      items: state.categories,
+      selectedIndex: state.selectedCategoryIndex,
+      scrollOffset: catScroll,
+      isActive: state.activePane === 0,
+    });
 
-  drawBox({
-    buffer,
-    tuiBox: layout.categories,
-    title: LABELS.categories,
-    items: state.categories,
-    selectedIndex: state.selectedCategoryIndex,
-    scrollOffset: catScroll,
-    isActive: state.activePane === 0,
-  });
+    drawToggled({
+      buffer,
+      tuiBox: layout.toggled,
+      rules,
+      isActive: state.activePane === 0,
+    });
 
-  drawStats({
-    buffer,
-    tuiBox: layout.stats,
-    rules,
-  });
+    drawBox({
+      buffer,
+      tuiBox: layout.rules,
+      title: `${LABELS.rules} (${rules.length})`,
+      items: rules,
+      selectedIndex: state.selectedRuleIndex,
+      scrollOffset: ruleScroll,
+      isActive: state.activePane === 1,
+    });
 
-  drawBox({
-    buffer,
-    tuiBox: layout.rules,
-    title: `${LABELS.rules} (${rules.length})`,
-    items: rules,
-    selectedIndex: state.selectedRuleIndex,
-    scrollOffset: ruleScroll,
-    isActive: state.activePane === 1,
-  });
-
-  drawDetails({
-    buffer,
-    tuiBox: layout.details,
-    rule: rules[state.selectedRuleIndex],
-    isActive: state.activePane === 2,
-  });
+    drawDetails({
+      buffer,
+      tuiBox: layout.details,
+      rule: rules[state.selectedRuleIndex],
+      isActive: state.activePane === 2,
+    });
+  }
 
   writeAt({
     buffer,
@@ -81,10 +87,12 @@ export function render(): void {
     content: `${ANSI[state.messageType] || ANSI.reset}${SYMBOLS.bullet} ${state.message}${ANSI.reset}`,
   });
 
+  const footerLabel = state.showInsights ? LABELS.footerInsights : LABELS.footer;
+
   writeAt({
     buffer,
     ...layout.footer,
-    content: colorize(`${LABELS.footer} | ${state.configPath || LABELS.noConfig}`, ANSI.dim),
+    content: `${formatFooter(footerLabel)} ${colorize("| " + (state.configPath || LABELS.noConfig), ANSI.dim)}`,
   });
 
   stdout.write(buffer.join(""));

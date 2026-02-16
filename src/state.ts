@@ -16,6 +16,8 @@ let state: State = {
   rulesByCategory: {},
   config: {},
   configPath: null,
+  showInsights: false,
+  insightsData: null,
 };
 
 export function initializeState(): void {
@@ -37,6 +39,14 @@ export function setMessage(message: string, messageType: State["messageType"]): 
 
 export function setLintInProgress(inProgress: boolean): void {
   state.isLintInProgress = inProgress;
+}
+
+export function toggleInsights(show?: boolean): void {
+  state.showInsights = show ?? !state.showInsights;
+}
+
+export function setInsightsData(data: any): void {
+  state.insightsData = data;
 }
 
 export function updateRuleHits(
@@ -80,7 +90,7 @@ export function updateConfigRule(rule: OxlintRule, newStatus: RuleStatus): void 
   try {
     const ruleName = rule.value;
     const canonicalKey =
-      rule.scope === "oxc2" || rule.scope === "eslint" ? ruleName : `${rule.scope}/${ruleName}`;
+      rule.scope === "oxc" || rule.scope === "eslint" ? ruleName : `${rule.scope}/${ruleName}`;
 
     const rules = state.config.rules;
     const existingKey = Object.keys(rules).find(

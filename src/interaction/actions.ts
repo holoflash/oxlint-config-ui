@@ -10,6 +10,8 @@ import {
   setState,
   getCurrentCategoryRules,
   updateConfigRule,
+  toggleInsights,
+  setMessage,
   getCurrentCategory,
 } from "../state.js";
 
@@ -25,11 +27,10 @@ function handleSetStatus(value: RuleStatus): void {
       rule.isActive = value === "error" || value === "warn";
     }
 
-    setState({
-      ...state,
-      message: `All ${currentCategoryRules.length} rules in '${category}' set to: ${value}`,
-      messageType: "info",
-    });
+    setMessage(
+      `All ${currentCategoryRules.length} rules in '${category}' set to: ${value}`,
+      "info",
+    );
   } else if (state.activePane === 1) {
     const rule = currentCategoryRules[state.selectedRuleIndex];
     if (!rule) return;
@@ -38,11 +39,7 @@ function handleSetStatus(value: RuleStatus): void {
     rule.configStatus = value;
     rule.isActive = value === "error" || value === "warn";
 
-    setState({
-      ...state,
-      message: `Rule '${rule.value}' set to: ${value}`,
-      messageType: "info",
-    });
+    setMessage(`Rule '${rule.value}' set to: ${value}`, "info");
   }
 
   render();
@@ -88,6 +85,11 @@ function isDivider(category: string): boolean {
 function handleMoveVertical(direction: "up" | "down"): void {
   const state = getState();
   const { activePane, selectedCategoryIndex, selectedRuleIndex, categories } = state;
+
+  if (state.showInsights) {
+    return;
+  }
+
   const currentCategoryRules = getCurrentCategoryRules();
 
   const layout = calculateLayout(stdout.columns, stdout.rows);
@@ -168,11 +170,16 @@ function handleMoveHorizontal(direction: "left" | "right"): void {
 export function executeAction(action: Action | null): void {
   if (!action) return;
 
+  const state = getState();
+  if (state.showInsights) {
+    const allowedTypes: Action["type"][] = ["EXIT", "RUN_LINT", "RUN_ALL_RULES", "TOGGLE_INSIGHTS"];
+    if (!allowedTypes.includes(action.type)) return;
+  }
+
   switch (action.type) {
     case "EXIT":
       stdout.write(ANSI.restoreTerminal);
       exit(0);
-      return;
 
     case "RUN_LINT":
       runLint();
@@ -182,11 +189,18 @@ export function executeAction(action: Action | null): void {
       runLint({ isRunAll: true });
       return;
 
-    case "RUN_SINGLE_RULE": {
-      const currentCategoryRules = getCurrentCategoryRules();
+    case "RUN_SELECTED": {
       const state = getState();
-      const rule = currentCategoryRules[state.selectedRuleIndex];
-      if (rule) runLint({ rule });
+      if (state.activePane === 0) {
+        const rules = getCurrentCategoryRules();
+        if (rules.length > 0) {
+          runLint({ rules });
+        }
+      } else if (state.activePane === 1) {
+        const currentCategoryRules = getCurrentCategoryRules();
+        const rule = currentCategoryRules[state.selectedRuleIndex];
+        if (rule) runLint({ rule });
+      }
       return;
     }
 
@@ -194,7 +208,7 @@ export function executeAction(action: Action | null): void {
       handleOpenDocs();
       return;
 
-    case "SET_STATUS":
+    case "SET_SEVERITY":
       if (action.value) handleSetStatus(action.value);
       return;
 
@@ -213,5 +227,19 @@ export function executeAction(action: Action | null): void {
     case "MOVE_RIGHT":
       handleMoveHorizontal("right");
       return;
+
+    case "TOGGLE_INSIGHTS": {
+      const state = getState();
+      if (!state.showInsights) {
+        if (!state.insightsData) {
+          runLint({ isRunAll: true });
+        }
+        toggleInsights(true);
+      } else {
+        toggleInsights(false);
+      }
+      render();
+      return;
+    }
   }
 }

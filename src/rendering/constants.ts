@@ -1,5 +1,5 @@
 export const ANSI = {
-  altScreenAndHideCursor: "\x1b[?1049h",
+  altScreenAndHideCursor: "\x1b[?1049h\x1b[?25l",
   restoreTerminal: "\x1b[?1049l\x1b[?25h",
   clearScreen: "\x1b[H\x1b[J",
   reset: "\x1b[0m",
@@ -31,13 +31,15 @@ export const BOX = {
 export const SYMBOLS = {
   ellipsis: "…",
   bullet: "●",
+  barFull: "█",
 } as const;
 
 export const LABELS = {
   categories: "CATEGORIES",
   rules: "RULES",
-  stats: "TOGGLED",
+  toggled: "TOGGLED",
   details: "DETAILS",
+  insights: "INSIGHTS",
   description: "Description:",
   noConfig: "No config loaded",
   configPrefix: "Config:",
@@ -47,27 +49,29 @@ export const LABELS = {
   error: "Error",
   warn: "Warn",
   off: "Off",
-  footer: "Arrows/HJKL: Nav | 1-3: Status | R: Active | A: All | X: Rule | Enter: Docs | Q: Quit",
+  footer: // Wrapping text in () highlights it in the footer
+    "(Arrows): Navigate | (1-3): Toggle Severity | Run → (A)ll, (S)elected, (T)oggled | Show (I)nsights | Open (D)ocs | (Q)uit",
+  footerInsights: "Run: (A)ll, (T)oggled | Hide (I)nsights | (Q)uit",
 } as const;
 
 export const LAYOUT = {
   boxBorder: 2,
   contentPadding: 4,
   descriptionPadding: 6,
-  statsLabelPadding: 8,
+  toggledLabelPadding: 8,
   titlePadding: 6,
   labelWidth: 12,
   messageRow: 3,
   footerRow: 1,
-  statsHeight: 6,
+  toggledHeight: 5,
   mainPaddingBottom: 5,
-  columnGap: 2,
+  columnGap: 1,
   columnWidths: { categories: 0.2, rules: 0.3 },
 } as const;
 
 export const DETAIL_FIELDS = [
   "Name",
-  "Status",
+  "Severity",
   "Category",
   "Scope",
   "Fix",

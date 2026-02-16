@@ -1,6 +1,6 @@
 import type { OxlintRule, TuiBox } from "../types.js";
 import { ANSI, BOX, LABELS, LAYOUT, DETAIL_FIELDS } from "./constants.js";
-import { colorize, writeAt, chunkString, truncateWithEllipsis } from "./helpers.js";
+import { colorize, writeAt, truncateWithEllipsis, wrapString } from "./helpers.js";
 import { calculateScrollThumb } from "./layout.js";
 
 export function drawBoxFrame(
@@ -119,17 +119,20 @@ export function drawBox({
   });
 }
 
-export function drawStats({
+export function drawToggled({
   buffer,
   rules,
   tuiBox,
+  isActive,
 }: {
   buffer: string[];
   rules: OxlintRule[];
   tuiBox: TuiBox;
+  isActive: boolean;
 }): void {
   const innerHeight = tuiBox.height - LAYOUT.boxBorder;
-  drawBoxFrame(buffer, tuiBox, LABELS.stats, ANSI.borderInactive);
+  const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
+  drawBoxFrame(buffer, tuiBox, LABELS.toggled, borderColor);
 
   const counts = { error: 0, warn: 0, off: 0 };
   rules.forEach((r) => {
@@ -147,7 +150,7 @@ export function drawStats({
   lines.forEach((line, i) => {
     if (i < innerHeight) {
       const numStr = String(line.count).padStart(3);
-      const labelStr = line.label.padEnd(tuiBox.width - LAYOUT.statsLabelPadding);
+      const labelStr = line.label.padEnd(tuiBox.width - LAYOUT.toggledLabelPadding);
       writeAt({
         buffer,
         row: tuiBox.row + 1 + i,
@@ -218,7 +221,7 @@ export function drawDetails({
     line++;
 
     const cleanDesc = (rule.description ?? LABELS.na).replace(/\s+/g, " ").trim();
-    const chunks = chunkString(cleanDesc, tuiBox.width - LAYOUT.descriptionPadding);
+    const chunks = wrapString(cleanDesc, tuiBox.width - 6);
 
     chunks.forEach((chunk) => {
       if (line < innerHeight) {
@@ -242,4 +245,111 @@ export function drawDetails({
       content: `Hit ${colorize("ENTER", ANSI.highlight)} to open docs`,
     });
   }
+}
+
+export function drawInsightsView({
+  buffer,
+  tuiBox,
+  insightsData,
+  rulesByCategory,
+  categories,
+}: {
+  buffer: string[];
+  tuiBox: TuiBox;
+  insightsData: any[];
+  rulesByCategory: Record<string, OxlintRule[]>;
+  categories: string[];
+}): void {
+  drawBoxFrame(buffer, tuiBox, LABELS.insights, ANSI.highlight);
+
+  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
+
+  let currentRow = tuiBox.row + 2;
+  const padding = 2;
+
+  const categoryCounts: Record<string, number> = {};
+  const rulesToGroups: Record<string, Set<string>> = {};
+
+  Object.entries(rulesByCategory).forEach(([groupName, rules]) => {
+    rules.forEach((r) => {
+      if (!rulesToGroups[r.value]) rulesToGroups[r.value] = new Set();
+      rulesToGroups[r.value].add(groupName);
+
+      if (r.scope) {
+        const fullCode = `${r.scope}/${r.value}`;
+        if (!rulesToGroups[fullCode]) rulesToGroups[fullCode] = new Set();
+        rulesToGroups[fullCode].add(groupName);
+
+        const scopeCode = `${r.scope}(${r.value})`;
+        if (!rulesToGroups[scopeCode]) rulesToGroups[scopeCode] = new Set();
+        rulesToGroups[scopeCode].add(groupName);
+      }
+    });
+  });
+
+  if (!insightsData) {
+    writeAt({
+      buffer,
+      row: tuiBox.row + 2,
+      col: tuiBox.col + 2,
+      content: colorize("Generating Insights...", ANSI.highlight),
+    });
+    return;
+  }
+
+  insightsData.forEach((d) => {
+    const code = d.code;
+    const rulePart = code.includes("(") ? code.split("(")[1].split(")")[0] : code;
+    const groups = rulesToGroups[code] || rulesToGroups[rulePart] || new Set();
+
+    groups.forEach((group) => {
+      categoryCounts[group] = (categoryCounts[group] || 0) + 1;
+    });
+  });
+
+  const sortedCategories = categories
+    .filter((cat) => !cat.startsWith("-"))
+    .map((cat) => ({
+      name: cat,
+      count: categoryCounts[cat] || 0,
+    }))
+    .filter((item) => item.count > 0)
+    .toSorted((a, b) => b.count - a.count);
+
+  if (sortedCategories.length === 0) {
+    writeAt({
+      buffer,
+      row: tuiBox.row + 2,
+      col: tuiBox.col + 2,
+      content: colorize("No rule categories found!", ANSI.dim),
+    });
+    return;
+  }
+
+  writeAt({
+    buffer,
+    row: currentRow,
+    col: tuiBox.col + padding,
+    content: colorize("Violations by Category", ANSI.highlight),
+  });
+  currentRow += 2;
+
+  sortedCategories.forEach((item, index) => {
+    const row = currentRow + index;
+    if (row < tuiBox.row + innerHeight - 1) {
+      const total = insightsData.length || 1;
+      const percentage = Math.round((item.count / total) * 100);
+
+      const label = item.name.padEnd(20);
+      const percentStr = `${percentage}%`.padStart(4);
+      const countStr = `(${item.count})`.padStart(6);
+
+      writeAt({
+        buffer,
+        row,
+        col: tuiBox.col + padding,
+        content: `${label} ${colorize(percentStr, ANSI.highlight)} ${colorize(countStr, ANSI.dim)}`,
+      });
+    }
+  });
 }

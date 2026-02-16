@@ -4,6 +4,7 @@ export type RuleStatus = "off" | "warn" | "error";
 
 export type LintOptions = {
   rule?: OxlintRule | null;
+  rules?: OxlintRule[];
   isRunAll?: boolean;
 };
 
@@ -43,6 +44,8 @@ export type State = {
   rulesByCategory: Record<string, OxlintRule[]>;
   config: OxlintConfig;
   configPath: string | null;
+  showInsights: boolean;
+  insightsData: any;
 };
 
 export type ActionType =
@@ -54,8 +57,9 @@ export type ActionType =
   | "EXIT"
   | "RUN_LINT"
   | "RUN_ALL_RULES"
-  | "RUN_SINGLE_RULE"
-  | "SET_STATUS";
+  | "RUN_SELECTED"
+  | "SET_SEVERITY"
+  | "TOGGLE_INSIGHTS";
 
 export type Action = {
   type: ActionType;

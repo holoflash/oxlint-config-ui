@@ -1,7 +1,13 @@
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
 import type { LintOptions, OxlintRule } from "../types.js";
-import { getState, setMessage, setLintInProgress, updateRuleHits } from "../state.js";
+import {
+  getState,
+  setMessage,
+  setLintInProgress,
+  updateRuleHits,
+  setInsightsData,
+} from "../state.js";
 import { render } from "../rendering/render.js";
 
 function buildLintArgs(options: LintOptions): string[] {
@@ -34,6 +40,11 @@ function buildLintArgs(options: LintOptions): string[] {
   } else if (rule) {
     const ruleName = `${rule.scope}/${rule.value}`;
     args.push("-A", "all", "-D", ruleName);
+  } else if (options.rules && options.rules.length > 0) {
+    args.push("-A", "all");
+    options.rules.forEach((r) => {
+      args.push("-D", `${r.scope}/${r.value}`);
+    });
   } else if (state.config && state.config.rules) {
     Object.entries(state.config.rules).forEach(([key, status]) => {
       const val = Array.isArray(status) ? status[0] : status;
@@ -47,53 +58,57 @@ function buildLintArgs(options: LintOptions): string[] {
 }
 
 function buildLintMessage(options: LintOptions): string {
-  const { rule, isRunAll } = options;
+  const { rule, isRunAll, rules } = options;
   const state = getState();
-
-  const typeAware =
-    rule || isRunAll
-      ? true
-      : Object.values(state.rulesByCategory)
-          .flat()
-          .some((ruleItem) => ruleItem.isActive && ruleItem.type_aware === true);
 
   let message = isRunAll ? "Running all rules" : "Linting";
 
   if (rule) {
     const ruleName = `${rule.scope}/${rule.value}`;
     message += ` [${ruleName}]`;
+  } else if (rules && rules.length > 0) {
+    const category = state.categories[state.selectedCategoryIndex];
+    if (rules.length === state.rulesByCategory[category]?.length) {
+      message += ` category '${category}' (${rules.length} rules)`;
+    } else {
+      message += ` ${rules.length} rules`;
+    }
   }
-
-  if (typeAware) {
-    message += " with --type-aware";
-  }
-
   message += "...";
 
   return message;
 }
 
-function processLintOutput(
-  stdoutData: string,
-  stderrData: string,
-  lintedRules?: OxlintRule[],
-): void {
+function processLintOutput(stdoutData: string, stderrData: string, options?: LintOptions): void {
   try {
     const output = JSON.parse(stdoutData || "{}");
-    const diagnostics = output.diagnostics || [];
+    const insightsData = output.diagnostics || [];
+    setInsightsData(insightsData);
+
     const hitCounts: Record<string, number> = {};
 
-    diagnostics.forEach((d: any) => {
+    let lintedRules: OxlintRule[] | undefined;
+    if (options?.rule) {
+      lintedRules = [options.rule];
+    } else if (options?.rules) {
+      lintedRules = options.rules;
+    } else if (options && !options.isRunAll) {
+      lintedRules = Object.values(getState().rulesByCategory)
+        .flat()
+        .filter((r) => r.isActive);
+    }
+
+    insightsData.forEach((d: any) => {
       const code = d.code;
       hitCounts[code] = (hitCounts[code] || 0) + 1;
     });
 
     updateRuleHits(hitCounts, lintedRules);
 
-    const errors = diagnostics.filter((d: any) => d.severity === "error").length;
-    const warnings = diagnostics.filter((d: any) => d.severity === "warning").length;
+    const errors = insightsData.filter((d: any) => d.severity === "error").length;
+    const warnings = insightsData.filter((d: any) => d.severity === "warning").length;
 
-    if (diagnostics.length > 0) {
+    if (insightsData.length > 0) {
       setMessage(
         `Found ${warnings} warning${warnings === 1 ? "" : "s"} and ${errors} error${errors === 1 ? "" : "s"}`,
         errors > 0 ? "error" : "warn",
@@ -144,16 +159,7 @@ export function runLint(options: LintOptions = {}): void {
 
   child.on("close", () => {
     setLintInProgress(false);
-
-    let lintedRules: OxlintRule[] | undefined;
-    if (options.rule) {
-      lintedRules = [options.rule];
-    } else if (!options.isRunAll) {
-      lintedRules = Object.values(getState().rulesByCategory)
-        .flat()
-        .filter((r) => r.isActive);
-    }
-    processLintOutput(stdoutData, stderrData, lintedRules);
+    processLintOutput(stdoutData, stderrData, options);
     render();
   });
 }
