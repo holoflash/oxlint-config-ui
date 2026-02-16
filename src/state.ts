@@ -2,8 +2,8 @@ import type { State, OxlintRule, RuleStatus } from "./types.js";
 import { loadRules } from "./oxlint/rules.js";
 
 let state: State = {
-  oxlintVersion: "1.46.0",
-  tsgolintVersion: "0.12.0",
+  oxlintVersion: "1.48.0",
+  tsgolintVersion: "0.14.0",
   activePane: 0,
   selectedCategoryIndex: 0,
   selectedRuleIndex: 0,

@@ -190,7 +190,6 @@ export function executeAction(action: Action | null): void {
       return;
 
     case "RUN_SELECTED": {
-      const state = getState();
       if (state.activePane === 0) {
         const rules = getCurrentCategoryRules();
         if (rules.length > 0) {
@@ -229,7 +228,6 @@ export function executeAction(action: Action | null): void {
       return;
 
     case "TOGGLE_INSIGHTS": {
-      const state = getState();
       if (!state.showInsights) {
         if (!state.insightsData) {
           runLint({ isRunAll: true });
