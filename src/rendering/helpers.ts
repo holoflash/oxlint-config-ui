@@ -31,3 +31,28 @@ export function chunkString(str: string, len: number): string[] {
   }
   return chunks;
 }
+
+export function wrapString(str: string, maxWidth: number): string[] {
+  if (!str || maxWidth <= 0) return [];
+  const words = str.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+
+  words.forEach((word) => {
+    if ((currentLine + word).length <= maxWidth) {
+      currentLine += (currentLine === "" ? "" : " ") + word;
+    } else {
+      if (currentLine !== "") lines.push(currentLine);
+      currentLine = word;
+    }
+  });
+
+  if (currentLine !== "") lines.push(currentLine);
+  return lines;
+}
+
+export function formatFooter(footerText: string): string {
+  return footerText
+    .replace(/\(([^)]+)\)/g, (_, chars) => colorize(`\x1b[4m${chars}\x1b[24m`, ANSI.highlight))
+    .replace(/\|/g, colorize("|", ANSI.dim));
+}

@@ -4,23 +4,26 @@ A lightweight, dependency-free Node.js TUI for browsing and running all availabl
 
 It automatically loads your local configuration (if one exists) to show you the current status of your project. You can then toggle rules on the fly to see how they affect your codebase without altering your actual configuration file.
 
-**It serves as a playground:** Toggle rules in memory, run the linter, and see the results immediately.
-
 ![screenshot](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot.png)
-
-## Why?
-
-Configuring linters often involves jumping between your editor, a massive JSON file, and web documentation. `oxlint-tui` tries to make the process easier by giving you an **interactive dashboard** right in your terminal. It allows you to "try before you buy"—enabling strict rules temporarily to see how many errors they would produce.
 
 ## Features
 
+- **Rule Discovery**: Explore the full catalog of Oxlint rules, categorized by scope and severity, to discover new linting opportunities for your project.
 - **Non-Destructive**: Toggling rules happens entirely in memory. No changes are written to disk, making it safe to experiment without messing up your config or comments.
-- **Config Aware**: Automatically reads `.oxlintrc.json` to initialize the state, but works perfectly even if no config file exists.
-- **Details**: View category, scope, fix, default, and type-aware rule parameters at a glance.
-- **Hit Counts**: See exactly how many violations each rule triggers in your codebase. Hits are displayed next to the rule name (e.g., `no-debugger (3)`) and highlighted for clarity.
-- **Run All**: Quickly run every available rule (even those turned off) to see what else might be lurking in your code.
+- **Config Aware**: Reads `.oxlintrc.json` or your provided config file to initialize the state, but works even if no config file exists.
+- **Details**: View description, category, scope, fix, default, and type-aware rule parameters at a glance.
+- **Hit Counts**: See exactly how many violations each rule triggers in your codebase. Hits are displayed next to the rule name (e.g., `no-debugger (3)`).
+- **Run All**: Quickly run every available rule (even those toggled off) to see what else might be lurking in your code.
 - **View Docs**: Press <kbd>ENTER</kbd> on any rule to open its official documentation in your browser.
 - **Zero Dependencies**: Written in pure Node.js without any heavy TUI libraries.
+
+### Insights
+
+See what categories are triggering the largest amount of rule violations:
+
+![screenshot2](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot2.png)
+
+_More coming soon..._
 
 ## Usage
 
@@ -52,20 +55,16 @@ oxlint-tui
 
 ## Keyboard Controls
 
-| Key             | Action                                  |
-| :-------------- | :-------------------------------------- |
-| **↑** / **k**   | Move selection Up                       |
-| **↓** / **j**   | Move selection Down                     |
-| **←** / **h**   | Move focus Left (Categories <-> Rules)  |
-| **→** / **l**   | Move focus Right (Categories <-> Rules) |
-| **1**           | Set selected rule to "off"              |
-| **2**           | Set selected rule to "warn"             |
-| **3**           | Set selected rule to "error"            |
-| **x**           | Run linter with the selected rule only  |
-| **r**           | Run linter with all activated rules     |
-| **a**           | Run linter with ALL available rules     |
-| **Enter**       | Open Rule Documentation in Browser      |
-| **q** / **Esc** | Quit                                    |
+| Key                   | Action                                             |
+| :-------------------- | :------------------------------------------------- |
+| **Arrows**            | Navigate between Categories, Rules, and Details    |
+| **1** / **2** / **3** | Set severity (**Off** / **Warn** / **Error**)      |
+| **a**                 | **A**ll: Run all available rules                   |
+| **s**                 | **S**elected: Run selected rule or category        |
+| **t**                 | **T**oggled: Run only active/toggled rules         |
+| **i**                 | **I**nsights: Toggle the summary distribution view |
+| **d**                 | **D**ocs: Open documentation in browser            |
+| **q**                 | **Q**uit: Exit application                         |
 
 ## Requirements
 
@@ -74,7 +73,7 @@ oxlint-tui
 
 ## Contributing
 
-If you're willing and able, please feel free to [contribute to this project](https://github.com/holoflash/oxlint-tui/blob/main/CONTRIBUTING.md).
+If you have any feature requests, want to report a bug, or want to contribute to this project, please open an issue or submit a pull request on [GitHub](https://github.com/holoflash/oxlint-tui).
 
 ## License
 
