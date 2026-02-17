@@ -6,6 +6,7 @@ import {
   buildRuleToGroupsMap,
   calculateCategoryCounts,
   sortCategoriesByCount,
+  calculateFixabilityStats,
 } from "./insights-utils.js";
 
 export function drawBoxFrame(
@@ -306,13 +307,39 @@ export function drawInsightsView({
   });
   currentRow += INSIGHTS.TITLE_SPACING;
 
+  const fixStats = calculateFixabilityStats(insightsData, rulesByCategory);
+  const fixablePercent = Math.round((fixStats.fixable / totalViolations) * 100);
+  const notFixablePercent = Math.round((fixStats.notFixable / totalViolations) * 100);
+
+  const rightColStart = tuiBox.col + padding + 40;
+  writeAt({
+    buffer,
+    row: currentRow - INSIGHTS.TITLE_SPACING,
+    col: rightColStart,
+    content: colorize("Fixability", ANSI.highlight),
+  });
+
+  writeAt({
+    buffer,
+    row: currentRow,
+    col: rightColStart,
+    content: `${"Auto-fixable".padEnd(15)} ${colorize(`${fixStats.fixable}`.padStart(4), ANSI.success)} ${colorize(`${fixablePercent}%`.padStart(4), ANSI.dim)}`,
+  });
+
+  writeAt({
+    buffer,
+    row: currentRow + 1,
+    col: rightColStart,
+    content: `${"Manual fix".padEnd(15)} ${colorize(`${fixStats.notFixable}`.padStart(4), ANSI.warn)} ${colorize(`${notFixablePercent}%`.padStart(4), ANSI.dim)}`,
+  });
+
   sortedCategories.forEach((item, index) => {
     const row = currentRow + index;
     if (row < tuiBox.row + innerHeight - 1) {
       const percentage = Math.round((item.count / totalViolations) * 100);
 
       const label = item.name.padEnd(INSIGHTS.CATEGORY_LABEL_WIDTH);
-      const countStr = `${item.count}`.padStart(4);
+      const countStr = `${item.count}`.padStart(7);
       const percentStr = `${percentage}%`.padStart(4);
 
       writeAt({

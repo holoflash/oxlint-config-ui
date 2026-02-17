@@ -57,3 +57,38 @@ export function sortCategoriesByCount(
     .filter((item) => item.count > 0)
     .toSorted((a, b) => b.count - a.count);
 }
+
+export function calculateFixabilityStats(
+  insightsData: any[],
+  rulesByCategory: Record<string, OxlintRule[]>,
+): { fixable: number; notFixable: number } {
+  const rulesToFix: Record<string, boolean> = {};
+
+  Object.values(rulesByCategory).forEach((rules) => {
+    rules.forEach((rule) => {
+      const isFixable = !!(rule.fix && rule.fix !== "none" && rule.fix !== "pending");
+      rulesToFix[rule.value] = isFixable;
+
+      if (rule.scope) {
+        rulesToFix[`${rule.scope}/${rule.value}`] = isFixable;
+        rulesToFix[`${rule.scope}(${rule.value})`] = isFixable;
+      }
+    });
+  });
+
+  let fixable = 0;
+  let notFixable = 0;
+
+  insightsData.forEach((diagnostic) => {
+    const code = diagnostic.code;
+    const rulePart = code.includes("(") ? code.split("(")[1].split(")")[0] : code;
+
+    if (rulesToFix[code] || rulesToFix[rulePart]) {
+      fixable++;
+    } else {
+      notFixable++;
+    }
+  });
+
+  return { fixable, notFixable };
+}
