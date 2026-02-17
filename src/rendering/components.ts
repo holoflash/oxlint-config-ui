@@ -296,28 +296,30 @@ export function drawInsightsView({
     return;
   }
 
+  const totalViolations = insightsData.length;
+
   writeAt({
     buffer,
     row: currentRow,
     col: tuiBox.col + padding,
-    content: colorize("Violations by Category", ANSI.highlight),
+    content: `${colorize("Violations by Category", ANSI.highlight)} ${colorize(`(${totalViolations} total)`, ANSI.dim)}`,
   });
   currentRow += INSIGHTS.TITLE_SPACING;
 
   sortedCategories.forEach((item, index) => {
     const row = currentRow + index;
     if (row < tuiBox.row + innerHeight - 1) {
-      const total = insightsData.length || 1;
-      const percentage = Math.round((item.count / total) * 100);
+      const percentage = Math.round((item.count / totalViolations) * 100);
 
       const label = item.name.padEnd(INSIGHTS.CATEGORY_LABEL_WIDTH);
-      const percentStr = `${percentage}%`.padStart(INSIGHTS.PERCENTAGE_WIDTH);
+      const countStr = `${item.count}`.padStart(4);
+      const percentStr = `${percentage}%`.padStart(4);
 
       writeAt({
         buffer,
         row,
         col: tuiBox.col + padding,
-        content: `${label} ${colorize(percentStr, ANSI.highlight)}`,
+        content: `${label} ${colorize(countStr, ANSI.highlight)} ${colorize(percentStr, ANSI.dim)}`,
       });
     }
   });
