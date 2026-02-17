@@ -308,8 +308,8 @@ export function drawInsightsView({
   currentRow += INSIGHTS.TITLE_SPACING;
 
   const fixStats = calculateFixabilityStats(insightsData, rulesByCategory);
-  const fixablePercent = Math.round((fixStats.fixable / totalViolations) * 100);
-  const notFixablePercent = Math.round((fixStats.notFixable / totalViolations) * 100);
+  const fixablePercent = ((fixStats.fixable / totalViolations) * 100).toFixed(1);
+  const notFixablePercent = ((fixStats.notFixable / totalViolations) * 100).toFixed(1);
 
   const rightColStart = tuiBox.col + padding + 40;
   writeAt({
@@ -336,11 +336,11 @@ export function drawInsightsView({
   sortedCategories.forEach((item, index) => {
     const row = currentRow + index;
     if (row < tuiBox.row + innerHeight - 1) {
-      const percentage = Math.round((item.count / totalViolations) * 100);
+      const percentage = ((item.count / totalViolations) * 100).toFixed(1);
 
       const label = item.name.padEnd(INSIGHTS.CATEGORY_LABEL_WIDTH);
-      const countStr = `${item.count}`.padStart(7);
-      const percentStr = `${percentage}%`.padStart(4);
+      const countStr = item.count.toString().padStart(7);
+      const percentStr = percentage.padStart(4) + "%";
 
       writeAt({
         buffer,
