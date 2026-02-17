@@ -1,7 +1,12 @@
 import type { OxlintRule, TuiBox } from "../types.js";
-import { ANSI, BOX, LABELS, LAYOUT, DETAIL_FIELDS } from "./constants.js";
+import { ANSI, BOX, LABELS, DETAIL_FIELDS, DIMENSIONS, INSIGHTS, DETAILS } from "../config.js";
 import { colorize, writeAt, truncateWithEllipsis, wrapString } from "./helpers.js";
 import { calculateScrollThumb } from "./layout.js";
+import {
+  buildRuleToGroupsMap,
+  calculateCategoryCounts,
+  sortCategoriesByCount,
+} from "./insights-utils.js";
 
 export function drawBoxFrame(
   buffer: string[],
@@ -11,9 +16,9 @@ export function drawBoxFrame(
   getScrollbarChar?: (rowIndex: number) => string,
 ): void {
   const { col, row, width, height } = tuiBox;
-  const innerHeight = height - LAYOUT.boxBorder;
+  const innerHeight = height - DIMENSIONS.BOX_BORDER;
 
-  const titleClean = truncateWithEllipsis(title, width - LAYOUT.titlePadding);
+  const titleClean = truncateWithEllipsis(title, width - DIMENSIONS.TITLE_PADDING);
   const topBorder = `${borderColor}${BOX.topLeft}${BOX.horizontal} ${titleClean} `.padEnd(
     width + borderColor.length - 1,
     BOX.horizontal,
@@ -27,7 +32,7 @@ export function drawBoxFrame(
       buffer,
       row: row + i,
       col,
-      content: `${borderColor}${BOX.vertical}${" ".repeat(width - LAYOUT.boxBorder)}${rightChar}${ANSI.reset}`,
+      content: `${borderColor}${BOX.vertical}${" ".repeat(width - DIMENSIONS.BOX_BORDER)}${rightChar}${ANSI.reset}`,
     });
   }
 
@@ -35,7 +40,7 @@ export function drawBoxFrame(
     buffer,
     row: row + height - 1,
     col,
-    content: `${borderColor}${BOX.bottomLeft}${BOX.horizontal.repeat(width - LAYOUT.boxBorder)}${BOX.bottomRight}${ANSI.reset}`,
+    content: `${borderColor}${BOX.bottomLeft}${BOX.horizontal.repeat(width - DIMENSIONS.BOX_BORDER)}${BOX.bottomRight}${ANSI.reset}`,
   });
 }
 
@@ -57,7 +62,7 @@ export function drawBox({
   tuiBox: TuiBox;
 }): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
-  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
+  const innerHeight = tuiBox.height - DIMENSIONS.BOX_BORDER;
 
   const { needsScrollbar, thumbStart, thumbEnd } = calculateScrollThumb(
     items.length,
@@ -77,7 +82,7 @@ export function drawBox({
 
     if (!isRule && rawText.startsWith("-")) {
       const label = rawText.replace(/-/g, "").trim();
-      const innerWidth = tuiBox.width - LAYOUT.boxBorder;
+      const innerWidth = tuiBox.width - DIMENSIONS.BOX_BORDER;
       const labelPart = `${BOX.horizontal} ${label} `;
       const remainingDashes = Math.max(0, innerWidth - labelPart.length);
 
@@ -95,8 +100,8 @@ export function drawBox({
       return;
     }
 
-    const display = truncateWithEllipsis(rawText, tuiBox.width - LAYOUT.contentPadding).padEnd(
-      tuiBox.width - LAYOUT.contentPadding,
+    const display = truncateWithEllipsis(rawText, tuiBox.width - DIMENSIONS.CONTENT_PADDING).padEnd(
+      tuiBox.width - DIMENSIONS.CONTENT_PADDING,
     );
 
     let itemColor: string = ANSI.dim;
@@ -130,7 +135,7 @@ export function drawToggled({
   tuiBox: TuiBox;
   isActive: boolean;
 }): void {
-  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
+  const innerHeight = tuiBox.height - DIMENSIONS.BOX_BORDER;
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
   drawBoxFrame(buffer, tuiBox, LABELS.toggled, borderColor);
 
@@ -150,7 +155,7 @@ export function drawToggled({
   lines.forEach((line, i) => {
     if (i < innerHeight) {
       const numStr = String(line.count).padStart(3);
-      const labelStr = line.label.padEnd(tuiBox.width - LAYOUT.toggledLabelPadding);
+      const labelStr = line.label.padEnd(tuiBox.width - DIMENSIONS.TOGGLED_LABEL_PADDING);
       writeAt({
         buffer,
         row: tuiBox.row + 1 + i,
@@ -173,7 +178,7 @@ export function drawDetails({
   tuiBox: TuiBox;
 }): void {
   const borderColor = isActive ? ANSI.borderActive : ANSI.borderInactive;
-  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
+  const innerHeight = tuiBox.height - DIMENSIONS.BOX_BORDER;
 
   drawBoxFrame(buffer, tuiBox, LABELS.details, borderColor);
 
@@ -204,7 +209,7 @@ export function drawDetails({
         buffer,
         row: tuiBox.row + 1 + line,
         col: tuiBox.col + 2,
-        content: `${colorize(lbl.padEnd(LAYOUT.labelWidth), ANSI.highlight)} ${val}`,
+        content: `${colorize(lbl.padEnd(DIMENSIONS.LABEL_WIDTH), ANSI.highlight)} ${val}`,
       });
       line++;
     }
@@ -221,7 +226,7 @@ export function drawDetails({
     line++;
 
     const cleanDesc = (rule.description ?? LABELS.na).replace(/\s+/g, " ").trim();
-    const chunks = wrapString(cleanDesc, tuiBox.width - 6);
+    const chunks = wrapString(cleanDesc, tuiBox.width - DETAILS.DESCRIPTION_WRAP_PADDING);
 
     chunks.forEach((chunk) => {
       if (line < innerHeight) {
@@ -262,30 +267,9 @@ export function drawInsightsView({
 }): void {
   drawBoxFrame(buffer, tuiBox, LABELS.insights, ANSI.highlight);
 
-  const innerHeight = tuiBox.height - LAYOUT.boxBorder;
-
-  let currentRow = tuiBox.row + 2;
-  const padding = 2;
-
-  const categoryCounts: Record<string, number> = {};
-  const rulesToGroups: Record<string, Set<string>> = {};
-
-  Object.entries(rulesByCategory).forEach(([groupName, rules]) => {
-    rules.forEach((r) => {
-      if (!rulesToGroups[r.value]) rulesToGroups[r.value] = new Set();
-      rulesToGroups[r.value].add(groupName);
-
-      if (r.scope) {
-        const fullCode = `${r.scope}/${r.value}`;
-        if (!rulesToGroups[fullCode]) rulesToGroups[fullCode] = new Set();
-        rulesToGroups[fullCode].add(groupName);
-
-        const scopeCode = `${r.scope}(${r.value})`;
-        if (!rulesToGroups[scopeCode]) rulesToGroups[scopeCode] = new Set();
-        rulesToGroups[scopeCode].add(groupName);
-      }
-    });
-  });
+  const innerHeight = tuiBox.height - DIMENSIONS.BOX_BORDER;
+  let currentRow = tuiBox.row + INSIGHTS.TITLE_SPACING;
+  const padding = INSIGHTS.PADDING;
 
   if (!insightsData) {
     writeAt({
@@ -297,24 +281,10 @@ export function drawInsightsView({
     return;
   }
 
-  insightsData.forEach((d) => {
-    const code = d.code;
-    const rulePart = code.includes("(") ? code.split("(")[1].split(")")[0] : code;
-    const groups = rulesToGroups[code] || rulesToGroups[rulePart] || new Set();
+  const rulesToGroups = buildRuleToGroupsMap(rulesByCategory);
 
-    groups.forEach((group) => {
-      categoryCounts[group] = (categoryCounts[group] || 0) + 1;
-    });
-  });
-
-  const sortedCategories = categories
-    .filter((cat) => !cat.startsWith("-"))
-    .map((cat) => ({
-      name: cat,
-      count: categoryCounts[cat] || 0,
-    }))
-    .filter((item) => item.count > 0)
-    .toSorted((a, b) => b.count - a.count);
+  const categoryCounts = calculateCategoryCounts(insightsData, rulesToGroups);
+  const sortedCategories = sortCategoriesByCount(categories, categoryCounts);
 
   if (sortedCategories.length === 0) {
     writeAt({
@@ -332,7 +302,7 @@ export function drawInsightsView({
     col: tuiBox.col + padding,
     content: colorize("Violations by Category", ANSI.highlight),
   });
-  currentRow += 2;
+  currentRow += INSIGHTS.TITLE_SPACING;
 
   sortedCategories.forEach((item, index) => {
     const row = currentRow + index;
@@ -340,8 +310,8 @@ export function drawInsightsView({
       const total = insightsData.length || 1;
       const percentage = Math.round((item.count / total) * 100);
 
-      const label = item.name.padEnd(20);
-      const percentStr = `${percentage}%`.padStart(4);
+      const label = item.name.padEnd(INSIGHTS.CATEGORY_LABEL_WIDTH);
+      const percentStr = `${percentage}%`.padStart(INSIGHTS.PERCENTAGE_WIDTH);
 
       writeAt({
         buffer,

@@ -1,6 +1,8 @@
-import type { ANSI } from "./rendering/render.js";
+import type { PANES, ANSI } from "./config.js";
 
 export type RuleStatus = "off" | "warn" | "error";
+
+export type PaneId = (typeof PANES)[keyof typeof PANES];
 
 export type LintOptions = {
   rule?: OxlintRule | null;
@@ -32,7 +34,7 @@ export type OxlintConfig = {
 export type State = {
   oxlintVersion: string;
   tsgolintVersion: string;
-  activePane: number;
+  activePane: PaneId;
   selectedCategoryIndex: number;
   selectedRuleIndex: number;
   categoryScroll: number;

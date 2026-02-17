@@ -2,9 +2,11 @@ import { stdout, exit } from "node:process";
 import { spawn } from "node:child_process";
 import { platform } from "node:process";
 import type { Action, RuleStatus } from "../types.js";
-import { render, ANSI } from "../rendering/render.js";
+import { render } from "../rendering/render.js";
 import { runLint } from "../oxlint/linting.js";
 import { calculateLayout, updateScroll } from "../rendering/layout.js";
+import { PANES, ANSI } from "../config.js";
+import { calculateNextIndex, skipDividers } from "./navigation-utils.js";
 import {
   getState,
   setState,
@@ -19,7 +21,7 @@ function handleSetStatus(value: RuleStatus): void {
   const state = getState();
   const currentCategoryRules = getCurrentCategoryRules();
 
-  if (state.activePane === 0) {
+  if (state.activePane === PANES.CATEGORIES) {
     const category = getCurrentCategory();
     for (const rule of currentCategoryRules) {
       updateConfigRule(rule, value);
@@ -31,7 +33,7 @@ function handleSetStatus(value: RuleStatus): void {
       `All ${currentCategoryRules.length} rules in '${category}' set to: ${value}`,
       "info",
     );
-  } else if (state.activePane === 1) {
+  } else if (state.activePane === PANES.RULES) {
     const rule = currentCategoryRules[state.selectedRuleIndex];
     if (!rule) return;
 
@@ -47,7 +49,7 @@ function handleSetStatus(value: RuleStatus): void {
 
 function handleOpenDocs(): void {
   const state = getState();
-  if (state.activePane !== 1) return;
+  if (state.activePane !== PANES.RULES) return;
 
   const currentCategoryRules = getCurrentCategoryRules();
   const rule = currentCategoryRules[state.selectedRuleIndex];
@@ -78,10 +80,6 @@ function handleOpenDocs(): void {
   }
 }
 
-function isDivider(category: string): boolean {
-  return category.startsWith("-");
-}
-
 function handleMoveVertical(direction: "up" | "down"): void {
   const state = getState();
   const { activePane, selectedCategoryIndex, selectedRuleIndex, categories } = state;
@@ -94,27 +92,10 @@ function handleMoveVertical(direction: "up" | "down"): void {
 
   const layout = calculateLayout(stdout.columns, stdout.rows);
 
-  if (activePane === 0) {
+  if (activePane === PANES.CATEGORIES) {
     const maxIndex = categories.length - 1;
-    let nextIndex =
-      direction === "up"
-        ? selectedCategoryIndex === 0
-          ? maxIndex
-          : selectedCategoryIndex - 1
-        : selectedCategoryIndex === maxIndex
-          ? 0
-          : selectedCategoryIndex + 1;
-
-    while (isDivider(categories[nextIndex])) {
-      nextIndex =
-        direction === "up"
-          ? nextIndex === 0
-            ? maxIndex
-            : nextIndex - 1
-          : nextIndex === maxIndex
-            ? 0
-            : nextIndex + 1;
-    }
+    const nextIndexRaw = calculateNextIndex(selectedCategoryIndex, maxIndex, direction);
+    const nextIndex = skipDividers(categories, nextIndexRaw, maxIndex, direction);
 
     setState({
       ...state,
@@ -128,16 +109,9 @@ function handleMoveVertical(direction: "up" | "down"): void {
         categories.length,
       ),
     });
-  } else if (activePane === 1) {
+  } else if (activePane === PANES.RULES) {
     const maxIndex = currentCategoryRules.length - 1;
-    const nextIndex =
-      direction === "up"
-        ? selectedRuleIndex === 0
-          ? maxIndex
-          : selectedRuleIndex - 1
-        : selectedRuleIndex === maxIndex
-          ? 0
-          : selectedRuleIndex + 1;
+    const nextIndex = calculateNextIndex(selectedRuleIndex, maxIndex, direction);
 
     setState({
       ...state,
@@ -158,11 +132,13 @@ function handleMoveHorizontal(direction: "left" | "right"): void {
   const state = getState();
   const { activePane } = state;
 
-  if (direction === "right" && activePane !== 1) {
-    setState({ ...state, activePane: activePane + 1 });
+  if (direction === "right" && activePane !== PANES.DETAILS) {
+    const nextPane = activePane === PANES.CATEGORIES ? PANES.RULES : PANES.DETAILS;
+    setState({ ...state, activePane: nextPane });
     render();
-  } else if (direction === "left" && activePane !== 0) {
-    setState({ ...state, activePane: activePane - 1 });
+  } else if (direction === "left" && activePane !== PANES.CATEGORIES) {
+    const nextPane = activePane === PANES.DETAILS ? PANES.RULES : PANES.CATEGORIES;
+    setState({ ...state, activePane: nextPane });
     render();
   }
 }
@@ -190,12 +166,12 @@ export function executeAction(action: Action | null): void {
       return;
 
     case "RUN_SELECTED": {
-      if (state.activePane === 0) {
+      if (state.activePane === PANES.CATEGORIES) {
         const rules = getCurrentCategoryRules();
         if (rules.length > 0) {
           runLint({ rules });
         }
-      } else if (state.activePane === 1) {
+      } else if (state.activePane === PANES.RULES) {
         const currentCategoryRules = getCurrentCategoryRules();
         const rule = currentCategoryRules[state.selectedRuleIndex];
         if (rule) runLint({ rule });

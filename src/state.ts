@@ -1,23 +1,24 @@
 import type { State, OxlintRule, RuleStatus } from "./types.js";
 import { loadRules } from "./oxlint/rules.js";
+import { INITIAL_STATE, VERSIONS } from "./config.js";
 
 let state: State = {
-  oxlintVersion: "1.48.0",
-  tsgolintVersion: "0.14.0",
-  activePane: 0,
-  selectedCategoryIndex: 0,
-  selectedRuleIndex: 0,
-  categoryScroll: 0,
-  ruleScroll: 0,
-  isLintInProgress: false,
-  message: "oxlint-tui",
-  messageType: "dim",
+  oxlintVersion: VERSIONS.OXLINT,
+  tsgolintVersion: VERSIONS.TSGOLINT,
+  activePane: INITIAL_STATE.ACTIVE_PANE,
+  selectedCategoryIndex: INITIAL_STATE.SELECTED_CATEGORY_INDEX,
+  selectedRuleIndex: INITIAL_STATE.SELECTED_RULE_INDEX,
+  categoryScroll: INITIAL_STATE.CATEGORY_SCROLL,
+  ruleScroll: INITIAL_STATE.RULE_SCROLL,
+  isLintInProgress: INITIAL_STATE.IS_LINT_IN_PROGRESS,
+  message: INITIAL_STATE.MESSAGE,
+  messageType: INITIAL_STATE.MESSAGE_TYPE,
   categories: [],
   rulesByCategory: {},
   config: {},
-  configPath: null,
-  showInsights: false,
-  insightsData: null,
+  configPath: INITIAL_STATE.CONFIG_PATH,
+  showInsights: INITIAL_STATE.SHOW_INSIGHTS,
+  insightsData: INITIAL_STATE.INSIGHTS_DATA,
 };
 
 export function initializeState(): void {

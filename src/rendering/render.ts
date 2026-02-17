@@ -1,10 +1,9 @@
 import { stdout } from "node:process";
 import { getState, setState } from "../state.js";
-import { ANSI, SYMBOLS, LABELS } from "./constants.js";
+import { ANSI, SYMBOLS, LABELS } from "../config.js";
 import { colorize, writeAt, formatFooter } from "./helpers.js";
 import { drawBox, drawToggled, drawDetails, drawInsightsView } from "./components.js";
 import { calculateLayout, updateScroll } from "./layout.js";
-export { ANSI } from "./constants.js";
 
 export function render(): void {
   const state = getState();

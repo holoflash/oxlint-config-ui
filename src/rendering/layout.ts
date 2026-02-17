@@ -1,31 +1,41 @@
-import { LAYOUT } from "./constants.js";
+import { DIMENSIONS, COLUMN_RATIOS, SCROLL } from "../config.js";
 
 export function calculateLayout(columns: number, rows: number) {
-  const { columnWidths, toggledHeight, boxBorder, mainPaddingBottom, columnGap } = LAYOUT;
-  const totalHeight = rows - mainPaddingBottom;
+  const totalHeight = rows - DIMENSIONS.MAIN_PADDING_BOTTOM;
 
-  const catW = Math.floor(columns * columnWidths.categories);
-  const rulesW = Math.floor(columns * columnWidths.rules);
+  const categoriesWidth = Math.floor(columns * COLUMN_RATIOS.CATEGORIES);
+  const rulesWidth = Math.floor(columns * COLUMN_RATIOS.RULES);
 
-  const detailsW = columns - catW - rulesW - columnGap * 2;
-  const catH = totalHeight - toggledHeight;
+  const detailsWidth = columns - categoriesWidth - rulesWidth - DIMENSIONS.COLUMN_GAP * 2;
+  const categoriesHeight = totalHeight - DIMENSIONS.TOGGLED_HEIGHT;
 
-  const rulesCol = catW + columnGap + 1;
-  const detailsCol = rulesCol + rulesW + columnGap;
+  const rulesCol = categoriesWidth + DIMENSIONS.COLUMN_GAP + 1;
+  const detailsCol = rulesCol + rulesWidth + DIMENSIONS.COLUMN_GAP;
 
   return {
-    categories: { col: 1, row: 1, width: catW, height: catH, viewportH: catH - boxBorder },
-    toggled: { col: 1, row: 1 + catH, width: catW, height: toggledHeight },
+    categories: {
+      col: 1,
+      row: 1,
+      width: categoriesWidth,
+      height: categoriesHeight,
+      viewportH: categoriesHeight - DIMENSIONS.BOX_BORDER,
+    },
+    toggled: {
+      col: 1,
+      row: 1 + categoriesHeight,
+      width: categoriesWidth,
+      height: DIMENSIONS.TOGGLED_HEIGHT,
+    },
     rules: {
       col: rulesCol,
       row: 1,
-      width: rulesW,
+      width: rulesWidth,
       height: totalHeight,
-      viewportH: totalHeight - boxBorder,
+      viewportH: totalHeight - DIMENSIONS.BOX_BORDER,
     },
-    details: { col: detailsCol, row: 1, width: detailsW, height: totalHeight },
-    messages: { col: 2, row: rows - LAYOUT.messageRow },
-    footer: { col: 2, row: rows - LAYOUT.footerRow },
+    details: { col: detailsCol, row: 1, width: detailsWidth, height: totalHeight },
+    messages: { col: 2, row: rows - DIMENSIONS.MESSAGE_ROW_OFFSET },
+    footer: { col: 2, row: rows - DIMENSIONS.FOOTER_ROW_OFFSET },
   };
 }
 
@@ -37,7 +47,10 @@ export function calculateScrollThumb(
   const needsScrollbar = totalItems > viewHeight;
   if (!needsScrollbar) return { needsScrollbar, thumbStart: 0, thumbEnd: 0 };
 
-  const thumbSize = Math.max(1, Math.floor((viewHeight * viewHeight) / totalItems));
+  const thumbSize = Math.max(
+    SCROLL.MIN_THUMB_SIZE,
+    Math.floor((viewHeight * viewHeight) / totalItems),
+  );
   const maxScroll = totalItems - viewHeight;
   const scrollRatio = maxScroll > 0 ? scrollOffset / maxScroll : 0;
   const thumbStart = Math.floor(scrollRatio * (viewHeight - thumbSize));

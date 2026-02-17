@@ -1,4 +1,4 @@
-import { ANSI, SYMBOLS } from "./constants.js";
+import { ANSI, SYMBOLS } from "../config.js";
 
 export function colorize(text: string, color: string): string {
   return `${color}${text}${ANSI.reset}`;
