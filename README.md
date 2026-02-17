@@ -19,11 +19,14 @@ It automatically loads your local configuration (if one exists) to show you the 
 
 ### Insights
 
-See what categories are triggering the largest amount of rule violations:
+Press <kbd>i</kbd> to view diagnostic insights about your codebase:
+
+- **Violations by Category**: See which rule categories (style, suspicious, etc.) are triggering the most violations, with counts and percentages
+- **Fixability Stats**: Understand how many violations can be auto-fixed with `oxlint --fix` vs. requiring manual changes
 
 ![screenshot2](https://raw.githubusercontent.com/holoflash/oxlint-tui/refs/heads/main/screenshot2.png)
 
-_More coming soon..._
+This helps you prioritize which issues to tackle first and understand the potential impact of running auto-fix.
 
 ## Usage
 
