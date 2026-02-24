@@ -1,6 +1,18 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { State, OxlintRule, RuleStatus } from "./types.js";
 import { loadRules } from "./oxlint/rules.js";
 import { INITIAL_STATE, VERSIONS } from "./config.js";
+
+function detectVersion(pkg: string, fallback: string): string {
+  try {
+    const pkgJsonPath = path.join(process.cwd(), "node_modules", pkg, "package.json");
+    const { version } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+    return version;
+  } catch {
+    return fallback;
+  }
+}
 
 let state: State = {
   oxlintVersion: VERSIONS.OXLINT,
@@ -22,6 +34,8 @@ let state: State = {
 };
 
 export function initializeState(): void {
+  state.oxlintVersion = detectVersion("oxlint", VERSIONS.OXLINT);
+  state.tsgolintVersion = detectVersion("oxlint-tsgolint", VERSIONS.TSGOLINT);
   state = { ...state, ...loadRules() };
 }
 
