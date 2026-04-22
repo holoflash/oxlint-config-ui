@@ -93,6 +93,7 @@ export function updateRuleHits(
         ruleToUpdate.hits = count;
         return true;
       }
+      return false;
     });
     return false;
   });

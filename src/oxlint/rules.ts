@@ -13,6 +13,7 @@ export function loadDescriptions() {
   if (fs.existsSync(compressedPath)) {
     return JSON.parse(zlib.brotliDecompressSync(fs.readFileSync(compressedPath)).toString());
   }
+  return undefined;
 }
 
 function getRuleStatus(ruleName: string, category: string, config: OxlintConfig): RuleStatus {
@@ -43,6 +44,7 @@ function fetchRulesFromOxlint(): any[] {
   } catch (error) {
     console.error("Error: Couldn't run 'npx oxlint'.", error);
     exit(1);
+    return [];
   }
 }
 
