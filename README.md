@@ -51,7 +51,7 @@ npx oxlint-tui your-oxlint-config.json
 If you use oxlint frequently, you can install it globally:
 
 ```bash
-npm install -g oxlint-tui
+pnpm add -g oxlint-tui
 
 oxlint-tui
 ```

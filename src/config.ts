@@ -55,8 +55,8 @@ export const INITIAL_STATE = {
 } as const;
 
 export const VERSIONS = {
-  OXLINT: "1.61.0",
-  TSGOLINT: "0.21.1",
+  OXLINT: "1.73.0",
+  TSGOLINT: "0.24.1",
 } as const;
 
 export const ANSI = {

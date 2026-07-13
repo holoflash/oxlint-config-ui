@@ -7,9 +7,9 @@ import { exit, argv } from "node:process";
 import type { OxlintRule, OxlintConfig, RuleStatus } from "../types.js";
 import { getState } from "../state.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 export function loadDescriptions() {
-  const compressedPath = path.join(__dirname, "rule-descriptions.br");
+  const compressedPath = path.join(currentDir, "rule-descriptions.br");
   if (fs.existsSync(compressedPath)) {
     return JSON.parse(zlib.brotliDecompressSync(fs.readFileSync(compressedPath)).toString());
   }
