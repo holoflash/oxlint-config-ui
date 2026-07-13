@@ -2,6 +2,32 @@
 
 Thank you for your interest in contributing!
 
+## Prerequisites
+
+This project uses [Vite+](https://viteplus.dev/) (`vp`) as its unified toolchain. You need to install `vp` globally before getting started.
+
+### Install `vp`
+
+**macOS / Linux:**
+
+```sh
+curl -fsSL https://vite.plus | bash
+```
+
+**Windows:**
+
+```sh
+irm https://vite.plus/ps1 | iex
+```
+
+After installation, open a new shell and verify by running:
+
+```sh
+vp help
+```
+
+> For more details, see the [Vite+ Getting Started guide](https://viteplus.dev/guide/).
+
 ## How to Contribute
 
 1. **Fork the repository**
@@ -15,12 +41,11 @@ Thank you for your interest in contributing!
    - `git checkout -b your-feature-or-fix`
 
 4. **Setup and workflow**
-   - Run `npm install` to install dependencies. This will also set up our git hooks (we use [Husky](https://typicode.github.io/husky/)). If you ever notice hooks are not working, run `npx husky install` manually.
-   - Run `npm run gen` to generate rule descriptions for local development.
-   - Use `npm run lint` regularly to follow our best practices.
-   - Make sure to run `npm run format` before you commit.
-   - Before each commit, a pre-commit hook will automatically run `npm run format-check`, and `npm run lint`. Your commit will be blocked if any of these checks fail.
-   - Make sure to run `npm run build-run` and confirm that the built version is working as expected.
+   - Run `vp install` to install dependencies. This will also set up our git hooks via [Vite+ commit hooks](https://viteplus.dev/guide/commit-hooks) (`.vite-hooks`).
+   - Run `vp run gen` to generate rule descriptions for local development.
+   - Use `vp lint` regularly to follow our best practices.
+   - Before each commit, a pre-commit hook will automatically run `vp staged`. Your commit will be blocked if any checks fail.
+   - Make sure to run `vp run build-run` and confirm that the built version is working as expected.
 
 5. **Commit and push your changes**
    - `git add .`

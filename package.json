@@ -20,28 +20,27 @@
   ],
   "type": "module",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "vp config",
     "dev": "tsx src/index.ts testconfig.json",
-    "lint": "oxlint --type-aware --type-check --format=stylish",
-    "format": "oxfmt",
-    "format-check": "oxfmt --check",
+    "lint": "vp lint --type-aware --type-check --format=stylish",
+    "format": "vp fmt",
+    "format-check": "vp fmt --check",
     "gen": "tsx scripts/generate-rule-descriptions.ts",
-    "build": "tsdown && cp src/oxlint/rule-descriptions.br dist/",
-    "build-run": "npm run gen && npm run build && node dist/index.mjs",
-    "prepublishOnly": "npm run gen && npm run build"
+    "build": "vp pack && cp src/oxlint/rule-descriptions.br dist/",
+    "build-run": "pnpm run gen && pnpm run build && node dist/index.mjs",
+    "prepublishOnly": "pnpm run gen && pnpm run build"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
-    "@typescript/native-preview": "7.0.0-dev.20260422.1",
-    "husky": "9.1.7",
-    "oxfmt": "0.46.0",
-    "oxlint": "1.61.0",
-    "oxlint-tsgolint": "0.21.1",
-    "tsdown": "0.21.10",
-    "tsx": "4.21.0",
-    "typescript": "6.0.3"
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vite-plus": "0.2.4"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.4"
   },
   "engines": {
     "node": ">=16"
-  }
+  },
+  "packageManager": "pnpm@11.12.0"
 }
