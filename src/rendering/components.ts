@@ -248,7 +248,7 @@ export function drawDetails({
       buffer,
       row: tuiBox.row + 1 + footerLine,
       col: tuiBox.col + 2,
-      content: `Hit ${colorize("ENTER", ANSI.highlight)} to open docs`,
+      content: `Hit ${colorize("d", ANSI.highlight)} to open docs`,
     });
   }
 }
